@@ -8,16 +8,14 @@ using System.Text;
 
 
 
-public class ExcelConverter : EditorWindow
+public class XlsxConverter : EditorWindow
 {
 
-	[MenuItem(@"Tools/ExcelConverter")]
+	[MenuItem(@"Tools/XlsxConverter")]
 	public static void ShowExcelWindow()
 	{
-		ExcelConverter wnd = EditorWindow.GetWindow<ExcelConverter>("ExcelConverter");
+		XlsxConverter wnd = EditorWindow.GetWindow<XlsxConverter>("XlsxConverter");
 		wnd.Init();
-		wnd.position = new Rect(100, 100, 300, 300);
-		wnd.maximized = true;
 		wnd.Show();
 	}
 
@@ -44,21 +42,21 @@ public class ExcelConverter : EditorWindow
 		GUILayout.Label("Convert excel files to universe !", EditorStyles.largeLabel);
 
 		GUILayout.Label("single file Path :", EditorStyles.largeLabel);
-		singleExcelPath = GUILayout.TextField(singleExcelPath);
+		singleExcelPath = EditorGUILayout.TextField(singleExcelPath);
 		if (GUILayout.Button("Open"))
 		{
 			singleExcelPath = EditorUtility.OpenFilePanel("Open file", String.Empty, "xlsx");
 		}
 
 		GUILayout.Label("group file Path :", EditorStyles.largeLabel);
-		groupExcelPath = GUILayout.TextField(groupExcelPath);
+		groupExcelPath = EditorGUILayout.TextField(groupExcelPath);
 		if (GUILayout.Button("Open"))
 		{
 			singleExcelPath = EditorUtility.OpenFilePanel("Open Folder", String.Empty, "xlsx");
 		}
 
 		GUILayout.Label("export Path :", EditorStyles.largeLabel);
-		exportPath = GUILayout.TextField(exportPath);
+		exportPath = EditorGUILayout.TextField(exportPath);
 		if (GUILayout.Button("Open"))
 		{
 			singleExcelPath = EditorUtility.OpenFilePanel("Open Folder", String.Empty, "xlsx");

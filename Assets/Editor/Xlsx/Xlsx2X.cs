@@ -11,7 +11,7 @@ using TwGame;
 
 
 
-public class Excel_To_X
+public class Xlsx2X
 {
 	private static readonly int StartRow = 5;
 

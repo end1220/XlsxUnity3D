@@ -16,6 +16,17 @@ namespace Lite
 	
 	public class XlsxReader
 	{
+		private static XlsxReader _inst = null;
+		public static XlsxReader Instance
+		{
+			get
+			{
+				if (_inst == null)
+					_inst = new XlsxReader();
+				return _inst;
+			}
+		}
+
 		public class SheetData
 		{
 			public int rowCount = 0;

@@ -12,7 +12,7 @@ namespace Lite
 	using Data = Dictionary<int, IData>;
 	using StrData = Dictionary<string, IData>;
 
-	public class DB
+	public class DataManager
 	{
 		private const int mJsonStartIndex = 5;
 		private const int mColumnStartIndex = 1;
@@ -20,7 +20,6 @@ namespace Lite
 		private Dictionary<Type, Data> mDataPoolDic = new Dictionary<Type, Data>();
 		private Dictionary<Type, StrData> mStrDataPoolDic = new Dictionary<Type, StrData>();
 
-		public bool HasLoaded = false;
 
 		private Dictionary<Type, string> tableList = new Dictionary<Type, string>
 			{
@@ -34,20 +33,12 @@ namespace Lite
 
 		public IEnumerator Load()
 		{
-			if (HasLoaded)
-			{
-				Debug.LogWarning("Skip DB.Load() , _isBuilt == true");
-				yield return null;
-			}
-
 			IDictionaryEnumerator dicEtor = tableList.GetEnumerator();
 			while (dicEtor.MoveNext())
 			{
 				LoadRes(dicEtor.Key as Type, "Template/" + dicEtor.Value as string);
 				yield return new WaitForEndOfFrame();
 			}
-
-			HasLoaded = true;
 
 			Debug.Log("db done");
 
@@ -76,13 +67,8 @@ namespace Lite
 			try
 			{
 				string rawText = null;
-#if UNITY_EDITOR
 				var ta = Resources.Load(path) as TextAsset;
 				rawText = ta.text;
-#else
-                    var ta = Resources.Load(path) as TextAsset;
-                    rawText = ta.text;
-#endif
 
 				Dictionary<int, IData> dic = new Dictionary<int, IData>();
 				Dictionary<string, IData> strDic = new Dictionary<string, IData>();
@@ -132,7 +118,7 @@ namespace Lite
 			}
 		}
 
-		public IData GetDataByKey(Type type, int key)
+		public IData GetData(Type type, int key)
 		{
 			if (mDataPoolDic.ContainsKey(type) && GetDataPool(type).ContainsKey(key))
 			{
@@ -145,7 +131,7 @@ namespace Lite
 			return null;
 		}
 
-		public IData GetDataByKey(Type type, string strKey)
+		public IData GetData(Type type, string strKey)
 		{
 			if (mStrDataPoolDic.ContainsKey(type) && GetStrDataPool(type).ContainsKey(strKey))
 			{
@@ -156,14 +142,14 @@ namespace Lite
 			return null;
 		}
 
-		public T GetDataByKey<T>(int key) where T : IData
+		public T GetData<T>(int key) where T : IData
 		{
-			return GetDataByKey(typeof(T), key) as T;
+			return GetData(typeof(T), key) as T;
 		}
 
-		public T GetDataByKey<T>(string strKey) where T : IData
+		public T GetData<T>(string strKey) where T : IData
 		{
-			return GetDataByKey(typeof(T), strKey) as T;
+			return GetData(typeof(T), strKey) as T;
 		}
 
 		public Dictionary<int, IData> GetDataPool<T>()
@@ -196,19 +182,5 @@ namespace Lite
 			return null;
 		}
 
-		public int GetPoolSize(Type type)
-		{
-			if (mDataPoolDic.ContainsKey(type))
-			{
-				return mDataPoolDic[type].Count;
-			}
-
-			return 0;
-		}
-
-		public IEnumerator GetElement(Type type)
-		{
-			return null;
-		}
 	}
 }

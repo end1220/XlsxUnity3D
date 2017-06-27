@@ -1,4 +1,4 @@
-//#define ENABLE_THIS
+#define ENABLE_THIS
 
 using System.Data;
 using System.IO;
@@ -12,7 +12,7 @@ using Lite;
 
 #if ENABLE_THIS
 
-public class Xlsx_To_X
+public class Xlsx2X2
 {
 
 	private static string xlsxPath = Application.dataPath + "/Xlsx/";
