@@ -10,7 +10,7 @@ using Lite;
 namespace TwGame
 {
 	using TemplateDic = Dictionary<int, ScriptableObject>;
-	public class TemplateManager
+	public class DataManager2
 	{
 
 		private Dictionary<Type, TemplateDic> templatePool = new Dictionary<Type, TemplateDic>();
@@ -52,7 +52,7 @@ namespace TwGame
 					string strTempPath = filePaths[i].Replace(@"\", "/");
 					strTempPath = strTempPath.Substring(strTempPath.IndexOf("Assets"));
 
-					TwTemplate tp = AssetDatabase.LoadAssetAtPath(strTempPath, typeof(ScriptableObject)) as TwTemplate;
+					BaseData tp = AssetDatabase.LoadAssetAtPath(strTempPath, typeof(ScriptableObject)) as BaseData;
 
 					soDic.Add(tp.id, tp);
 				}
@@ -61,7 +61,7 @@ namespace TwGame
 		}
 
 
-		public T Get<T>(int id) where T : TwTemplate
+		public T Get<T>(int id) where T : BaseData
 		{
 			Dictionary<int, ScriptableObject> soDic = null;
 			templatePool.TryGetValue(typeof(T), out soDic);

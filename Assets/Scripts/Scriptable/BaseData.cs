@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace TwGame
 {
-	public abstract class TwTemplate : ScriptableObject
+	public abstract class BaseData : ScriptableObject
 	{
 		public int id;
 

@@ -127,7 +127,7 @@ public class Xlsx2X
 					sheetData.At(row, col).Replace("\n", "\\n");
 
 				var asset = ScriptableObject.CreateInstance(GetClassName(fileName));
-				TwTemplate tp = asset as TwTemplate;
+				BaseData tp = asset as BaseData;
 				tp._init(sheetData.Table, row, 0);
 
 				string itemPath = targetDir + "/" + tp.id + ".asset";
@@ -156,7 +156,7 @@ public class Xlsx2X
 
 			csFile += "namespace TwGame" + "\n";
 			csFile += "{\n\t[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
-			csFile += "\tpublic class " + GetClassName(fileName) + " : TwTemplate" + "\n";
+			csFile += "\tpublic class " + GetClassName(fileName) + " : BaseData" + "\n";
 			csFile += "\t" + "{" + "\n";
 
 			int columnCount = sheetData.columnCount;
