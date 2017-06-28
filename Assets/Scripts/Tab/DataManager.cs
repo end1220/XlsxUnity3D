@@ -23,7 +23,7 @@ namespace Lite
 
 		private Dictionary<Type, string> tableList = new Dictionary<Type, string>
 			{
-				{typeof(Npc0_Data), "Npc0"},
+				//{typeof(Npc0_Data), "Npc0"},
 			};
 
 		public Dictionary<Type, string> TableList

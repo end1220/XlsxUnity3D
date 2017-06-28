@@ -11,105 +11,52 @@ using TwGame;
 
 
 
-public class Xlsx2X
+public class Xlsx_Asset
 {
 	private static readonly int StartRow = 5;
 
-	private static string xlsxPath = Application.dataPath + "/Locke/Xlsx/";
-	private static string jsonPath = Application.dataPath + "/Locke/json/";
-	private static string txtPath = Application.dataPath + "/Locke/txt/";
-	private static string csPath = Application.dataPath + "/Locke/cs/";
-	private static string scriptObjPath = Application.dataPath + "/Locke/obj/";
+	private static string csPath = Application.dataPath + "/Scripts/autogen/";
+	private static string scriptObjPath = Application.dataPath + "/scriptable/";
 
 
-	[MenuItem("Tools/Excel/excel to asset")]
-	static void xlsx_to_asset()
+	public static void xlsx_to_asset(string srcFilePath)
 	{
 		try
 		{
-			System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-			watch.Start();
-
-			Object[] selectedObjects = Selection.GetFiltered(typeof(Object), SelectionMode.Assets);
-			if (selectedObjects.Length == 0)
-				Debug.LogError("u should select at least one .xlsx file.");
-			int convertedCount = 0;
-			for (int i = 0; i < selectedObjects.Length; i++)
-			{
-				Object obj = selectedObjects[i] as Object;
-
-				string srcFilePath = xlsxPath + obj.name + ".xlsx";
-				if (!File.Exists(srcFilePath))
-					continue;
-				var sheetData = ExcelReader.Instance.AsStringArray(srcFilePath);
-				_to_asset(obj.name, sheetData);
-
-				convertedCount++;
-				UpdateProgress(convertedCount, selectedObjects.Length, (txtPath + obj.name).Replace(Application.dataPath, "Assets"));
-			}
-			EditorUtility.ClearProgressBar();
-			AssetDatabase.Refresh();
-
-			watch.Stop();
-
-			Debug.Log(string.Format("excel to script object done, {0} files converted. take {1} ms.", convertedCount, watch.ElapsedMilliseconds));
+			int index = srcFilePath.LastIndexOf("/") + 1;
+			string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
+			var sheetData = ExcelReader.Instance.AsStringArray(srcFilePath);
+			_to_asset(fileName, sheetData);
 		}
 		catch (System.Exception e)
 		{
 			Debug.LogError(e.ToString());
-			EditorUtility.ClearProgressBar();
 			AssetDatabase.Refresh();
 		}
 	}
 
 
-	#region to cs
-
-	[MenuItem("Tools/Excel/excel to cs")]
-	static void xlsx_to_cs()
+	public static void xlsx_to_cs(string srcFilePath)
 	{
 		try
 		{
-			System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-			watch.Start();
+			int index = srcFilePath.LastIndexOf("/") + 1;
+			string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
+			var sheetData = ExcelReader.Instance.AsStringArray(srcFilePath);
+			string txt = _to_cs(sheetData, fileName);
+			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(csPath + GetClassName(fileName) + ".cs", false);
+			streamwriter.Write(txt);
+			streamwriter.Flush();
+			streamwriter.Close();
 
-			Object[] selectedObjects = Selection.GetFiltered(typeof(Object), SelectionMode.Assets);
-			if (selectedObjects.Length == 0)
-				Debug.LogError("u should select at least one .xlsx file.");
-			int convertedCount = 0;
-			for (int i = 0; i < selectedObjects.Length; i++)
-			{
-				Object obj = selectedObjects[i] as Object;
-
-				string srcFilePath = xlsxPath + obj.name + ".xlsx";
-				if (!File.Exists(srcFilePath))
-					continue;
-				var sheetData = ExcelReader.Instance.AsStringArray(srcFilePath);
-				string txt = _to_cs(sheetData, obj.name);
-				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(csPath + GetClassName(obj.name) + ".cs", false);
-				streamwriter.Write(txt);
-				streamwriter.Flush();
-				streamwriter.Close();
-
-				convertedCount++;
-				UpdateProgress(convertedCount, selectedObjects.Length, (txtPath + GetClassName(obj.name) + ".cs").Replace(Application.dataPath, "Assets"));
-			}
-			EditorUtility.ClearProgressBar();
-			AssetDatabase.Refresh();
-
-			watch.Stop();
-
-			Debug.Log(string.Format("excel to cs done, {0} files converted. take {1} ms.", convertedCount, watch.ElapsedMilliseconds));
 		}
 		catch (System.Exception e)
 		{
 			Debug.LogError(e.ToString());
-			EditorUtility.ClearProgressBar();
 			AssetDatabase.Refresh();
 		}
 	}
 
-	#endregion
 
 
 	public static void _to_asset(string fileName, ExcelReader.SheetData sheetData)

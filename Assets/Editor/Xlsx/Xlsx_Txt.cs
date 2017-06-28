@@ -12,16 +12,59 @@ using Lite;
 
 #if ENABLE_THIS
 
-public class Xlsx2X2
+public class Xlsx_Txt
 {
 
 	private static string xlsxPath = Application.dataPath + "/Xlsx/";
-	private static string txtPath = Application.dataPath + "/Resources/Template/";
-	private static string csPath = Application.dataPath + "/Scripts/Template/auto/";
+	private static string txtPath = Application.dataPath + "/Txt/";
+	private static string csPath = Application.dataPath + "/Scripts/autogen/";
 
 
-	[MenuItem("Tools/Excel/xlsx -> txt")]
-	static void xlsx_to_txt()
+	public static void xlsx_to_txt(string srcFilePath)
+	{
+		try
+		{
+			srcFilePath.Replace("\\", "/");
+			int index = srcFilePath.LastIndexOf("/") + 1;
+			string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
+			var sheetData = XlsxReader.Instance.AsStringArray(srcFilePath);
+			string txt = _to_txt(sheetData);
+			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(txtPath + fileName + ".txt.bytes", false);
+			streamwriter.Write(txt);
+			streamwriter.Flush();
+			streamwriter.Close();
+
+			AssetDatabase.Refresh();
+
+		}
+		catch (System.Exception)
+		{
+			AssetDatabase.Refresh();
+		}
+	}
+
+
+	public static void xlsx_to_cs(string srcFilePath)
+	{
+		try
+		{
+			int index = srcFilePath.LastIndexOf("/") + 1;
+			string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
+			var sheetData = XlsxReader.Instance.AsStringArray(srcFilePath);
+			string txt = _to_cs(sheetData, fileName);
+			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(csPath + fileName + "_Data.cs", false);
+			streamwriter.Write(txt);
+			streamwriter.Flush();
+			streamwriter.Close();
+		}
+		catch (System.Exception)
+		{
+			AssetDatabase.Refresh();
+		}
+	}
+
+
+	/*static void xlsx_to_txt_back()
 	{
 		try
 		{
@@ -41,7 +84,7 @@ public class Xlsx2X2
 					continue;
 				var sheetData = XlsxReader.Instance.AsStringArray(srcFilePath);
 				string txt = _to_txt(sheetData);
-				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(txtPath + obj.name + ".txt", false);
+				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(txtPath + obj.name + ".txt.bytes", false);
 				streamwriter.Write(txt);
 				streamwriter.Flush();
 				streamwriter.Close();
@@ -64,8 +107,7 @@ public class Xlsx2X2
 	}
 
 
-	[MenuItem("Tools/Excel/xlsx -> cs")]
-	static void xlsx_to_cs()
+	static void xlsx_to_cs_back()
 	{
 		try
 		{
@@ -105,7 +147,7 @@ public class Xlsx2X2
 			EditorUtility.ClearProgressBar();
 			AssetDatabase.Refresh();
 		}
-	}
+	}*/
 
 	#region _functions
 
