@@ -6,8 +6,13 @@ using UnityEngine;
 
 namespace Lite
 {
-	public class BaseDataCollection : ScriptableObject
+	public abstract class BaseDataCollection : ScriptableObject
 	{
-		
+		public abstract void AddData(BaseData data);
+
+		public abstract int GetDataCount();
+
+		public abstract BaseData GetData(int index);
+
 	}
 }

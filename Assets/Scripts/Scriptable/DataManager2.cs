@@ -9,18 +9,15 @@ using Lite;
 
 namespace Lite
 {
-	using TemplateDic = Dictionary<int, ScriptableObject>;
+	using DataDic = Dictionary<int, BaseData>;
 	public class DataManager2
 	{
 
-		private Dictionary<Type, TemplateDic> templatePool = new Dictionary<Type, TemplateDic>();
+		private Dictionary<Type, DataDic> templatePool = new Dictionary<Type, DataDic>();
 
 		private static Dictionary<Type, string> files = new Dictionary<Type, string>()
 		{
-			/*{typeof(Skill_Template), "Skill"},
-			{typeof(Buff_Template), "Buff"},
-			{typeof(Npc_Template), "Npc"},
-			{typeof(Item_Template), "Item"},*/
+			{typeof(Npc0_Data), "Npc0"},
 		};
 
 
@@ -32,26 +29,22 @@ namespace Lite
 
 		public void Init()
 		{
-			string scriptObjPath = "Assets/Locke/obj/";
+			string scriptObjPath = "Assets/scriptable/";
 
 			IDictionaryEnumerator iter = files.GetEnumerator();
 			while (iter.MoveNext())
 			{
 				string filePath = iter.Value as string;
 
-				Dictionary<int, ScriptableObject> soDic = new Dictionary<int, ScriptableObject>();
+				DataDic soDic = new DataDic();
 
-				string[] filePaths = Directory.GetFiles(scriptObjPath + filePath, "*.asset", SearchOption.AllDirectories);
-
-				for (int i = 0; i < filePaths.Length; ++i)
+				BaseDataCollection collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(scriptObjPath + filePath + ".asset");
+				for (int i = 0; i < collection.GetDataCount(); ++i)
 				{
-					string strTempPath = filePaths[i].Replace(@"\", "/");
-					strTempPath = strTempPath.Substring(strTempPath.IndexOf("Assets"));
-
-					BaseDataCollection tp = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(strTempPath);
-
-					//soDic.Add(tp.id, tp);
+					BaseData data = collection.GetData(i);
+					soDic.Add(data.id, data);
 				}
+
 				templatePool.Add(iter.Key as Type, soDic);
 			}
 		}
@@ -59,13 +52,13 @@ namespace Lite
 
 		public T Get<T>(int id) where T : BaseData
 		{
-			Dictionary<int, ScriptableObject> soDic = null;
+			DataDic soDic = null;
 			templatePool.TryGetValue(typeof(T), out soDic);
 			if (soDic != null)
 			{
-				ScriptableObject so = null;
-				soDic.TryGetValue(id, out so);
-				return so as T;
+				BaseData data = null;
+				soDic.TryGetValue(id, out data);
+				return data as T;
 			}
 			return null;
 		}

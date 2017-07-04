@@ -1,5 +1,5 @@
 
-
+using System;
 using System.Data;
 using System.IO;
 
@@ -23,6 +23,9 @@ public class Xlsx_ScriptableObject
 	{
 		try
 		{
+			if (!Directory.Exists(scriptObjPath))
+				Directory.CreateDirectory(scriptObjPath);
+
 			int index = srcFilePath.LastIndexOf("/") + 1;
 			string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
 			var sheetData = ExcelReader.Instance.AsStringArray(srcFilePath);
@@ -44,7 +47,7 @@ public class Xlsx_ScriptableObject
 			string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
 			var sheetData = ExcelReader.Instance.AsStringArray(srcFilePath);
 			string txt = _to_cs(sheetData, fileName);
-			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(csPath + GetClassName(fileName) + ".cs", false);
+			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(csPath + GetAssetClassName(fileName) + ".cs", false);
 			streamwriter.Write(txt);
 			streamwriter.Flush();
 			streamwriter.Close();
@@ -63,24 +66,45 @@ public class Xlsx_ScriptableObject
 	{
 		try
 		{
+			/*if (!Directory.Exists(targetDir))
+				Directory.CreateDirectory(targetDir);
+
 			string targetDir = scriptObjPath + fileName;
 			if (Directory.Exists(targetDir))
 				Directory.Delete(targetDir, true);
-			Directory.CreateDirectory(targetDir);
+			Directory.CreateDirectory(targetDir);*/
 
-			/*for (int row = StartRow; row < sheetData.rowCount; ++row)
+			var asset = ScriptableObject.CreateInstance(GetAssetClassName(fileName));
+			BaseDataCollection dataCollect = asset as BaseDataCollection;
+
+			string className = GetDataClassName(fileName);
+			Type dataType = Type.GetType(className);
+			if (dataType == null)
+			{
+				System.Reflection.Assembly asmb = System.Reflection.Assembly.LoadFrom(Environment.CurrentDirectory + "/Library/ScriptAssemblies/Assembly-CSharp.dll");
+				dataType = asmb.GetType(className);
+			}
+			if (dataType == null)
+			{
+				Debug.LogError(className + " not exist !");
+				return;
+			}
+
+			System.Reflection.ConstructorInfo dataCtor = dataType.GetConstructor(Type.EmptyTypes);
+
+			for (int row = StartRow; row < sheetData.rowCount; ++row)
 			{
 				for (int col = 0; col < sheetData.columnCount; ++col)
 					sheetData.At(row, col).Replace("\n", "\\n");
 
-				var asset = ScriptableObject.CreateInstance(GetCollectionClassName(fileName));
-				BaseDataCollection tp = asset as BaseDataCollection;
-				tp._init(sheetData.Table, row, 0);
+				BaseData inst = dataCtor.Invoke(null) as BaseData;
+				inst._init(sheetData.Table, row, 0);
+				dataCollect.AddData(inst);
+			}
 
-				string itemPath = targetDir + "/" + tp.id + ".asset";
-				itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
-				AssetDatabase.CreateAsset(asset, itemPath);
-			}*/
+			string itemPath = scriptObjPath + fileName + ".asset";
+			itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
+			AssetDatabase.CreateAsset(asset, itemPath);
 			
 			AssetDatabase.Refresh();
 		}
@@ -99,10 +123,10 @@ public class Xlsx_ScriptableObject
 		{
 			string csFile = "\n\n// Auto generated file. DO NOT MODIFY.\n\n";
 
-			csFile += "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\n\n\n";
-			csFile += "namespace Lite\n{\n";
-			csFile += "\tpublic class " + GetClassName(fileName) + " : BaseData" + "\n";
-			csFile += "\t" + "{" + "\n";
+			csFile += "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\nusing Lite;\n\n\n";
+			csFile += "[Serializable]\n";
+			csFile += "public class " + GetDataClassName(fileName) + " : BaseData" + "\n";
+			csFile += "" + "{" + "\n";
 
 			int columnCount = sheetData.columnCount;
 
@@ -146,12 +170,12 @@ public class Xlsx_ScriptableObject
 					{
 						if (variableLength[cellColumnIndex].Equals(""))
 						{
-							csFile += "\t\tpublic " + variableType[cellColumnIndex] + " " + variableName[cellColumnIndex] + ";\n";
+							csFile += "\tpublic " + variableType[cellColumnIndex] + " " + variableName[cellColumnIndex] + ";\n";
 							csFile += "\n";
 						}
 						else
 						{
-							csFile += "\t\tpublic " + variableType[cellColumnIndex] + "[] " + variableName[cellColumnIndex] + " = new " + variableType[cellColumnIndex] + "[" + variableLength[cellColumnIndex] + "];\t\n";
+							csFile += "\tpublic " + variableType[cellColumnIndex] + "[] " + variableName[cellColumnIndex] + " = new " + variableType[cellColumnIndex] + "[" + variableLength[cellColumnIndex] + "];\t\n";
 							csFile += "\n";
 						}
 					}
@@ -163,10 +187,10 @@ public class Xlsx_ScriptableObject
 			// Get variableDefaultValue array
 			// the fourth row is variableDefaultValue
 			string[] variableDefaultValue = new string[columnCount];
-			csFile += "\n\n\t\t#region _init (Do not invoke it)\n";
-			csFile += "\t\tpublic override int _init(List<List<string>> sheet, int row, int column)" + "\n";
-			csFile += "\t\t{" + "\n";
-			csFile += "\t\t\tcolumn = base._init(sheet, row, column);\n\n";
+			csFile += "\n\n\t#if UNITY_EDITOR\n";
+			csFile += "\n\tpublic override int _init(List<List<string>> sheet, int row, int column)" + "\n";
+			csFile += "\t{" + "\n";
+			csFile += "\t\tcolumn = base._init(sheet, row, column);\n\n";
 			for (int col = 0; col < columnCount; col++)
 			{
 				int cellColumnIndex = col;
@@ -189,77 +213,80 @@ public class Xlsx_ScriptableObject
 					{
 						if (variableLength[cellColumnIndex].Equals(""))
 						{
-							csFile += "\t\t\t" + variableName[cellColumnIndex] + " = " + variableDefaultValue[cellColumnIndex] + ";\n";
-							csFile += "\t\t\t" + variableType[cellColumnIndex] + ".TryParse(sheet[row][column], out " + variableName[cellColumnIndex] + ");\n";
+							csFile += "\t\t" + variableName[cellColumnIndex] + " = " + variableDefaultValue[cellColumnIndex] + ";\n";
+							csFile += "\t\t" + variableType[cellColumnIndex] + ".TryParse(sheet[row][column], out " + variableName[cellColumnIndex] + ");\n";
 						}
 						else
 						{
 							// default value
-							csFile += "\t\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)" + "\n";
-							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
+							csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)" + "\n";
+							csFile += "\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
 
-							csFile += "\t\t\tstring[] " + variableName[cellColumnIndex] + "Array = sheet[row][column].Split(\',\');" + "\n";
-							csFile += "\t\t\tint " + variableName[cellColumnIndex] + "Count = " + variableName[cellColumnIndex] + "Array.Length;" + "\n";
-							csFile += "\t\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)\n";
-							csFile += "\t\t\t{\n";
-							csFile += "\t\t\t\tif(i < " + variableName[cellColumnIndex] + "Count)" + "\n";
-							csFile += "\t\t\t\t\t" + variableType[cellColumnIndex] + ".TryParse(" + variableName[cellColumnIndex] + "Array[i], out " + variableName[cellColumnIndex] + "[i]);" + "\n";
-							csFile += "\t\t\t\telse" + "\n";
-							csFile += "\t\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
-							csFile += "\t\t\t}\n";
+							csFile += "\t\tstring[] " + variableName[cellColumnIndex] + "Array = sheet[row][column].Split(\',\');" + "\n";
+							csFile += "\t\tint " + variableName[cellColumnIndex] + "Count = " + variableName[cellColumnIndex] + "Array.Length;" + "\n";
+							csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)\n";
+							csFile += "\t\t{\n";
+							csFile += "\t\t\tif(i < " + variableName[cellColumnIndex] + "Count)" + "\n";
+							csFile += "\t\t\t\t" + variableType[cellColumnIndex] + ".TryParse(" + variableName[cellColumnIndex] + "Array[i], out " + variableName[cellColumnIndex] + "[i]);" + "\n";
+							csFile += "\t\t\telse" + "\n";
+							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
+							csFile += "\t\t}\n";
 						}
 					}
 					if (variableType[cellColumnIndex].Equals("string"))
 					{
 						if (variableLength[cellColumnIndex].Equals(""))
 						{
-							csFile += "\t\t\tif(sheet[row][column] == null)" + "\n";
-							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + " = " + variableDefaultValue[cellColumnIndex] + ";\n";
-							csFile += "\t\t\telse" + "\n";
-							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + " = sheet[row][column];\n";
+							csFile += "\t\tif(sheet[row][column] == null)" + "\n";
+							csFile += "\t\t\t" + variableName[cellColumnIndex] + " = " + variableDefaultValue[cellColumnIndex] + ";\n";
+							csFile += "\t\telse" + "\n";
+							csFile += "\t\t\t" + variableName[cellColumnIndex] + " = sheet[row][column];\n";
 						}
 						else
 						{
-							csFile += "\t\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)" + "\n";
-							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
+							csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)" + "\n";
+							csFile += "\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
 
-							csFile += "\t\t\tstring[] " + variableName[cellColumnIndex] + "Array = sheet[row][column].Split(\',\');" + "\n";
-							csFile += "\t\t\tint " + variableName[cellColumnIndex] + "Count = " + variableName[cellColumnIndex] + "Array.Length;" + "\n";
-							csFile += "\t\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++){" + "\n";
-							csFile += "\t\t\t\tif(i < " + variableName[cellColumnIndex] + "Count)" + "\n";
-							csFile += "\t\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableName[cellColumnIndex] + "Array[i];\n";
-							csFile += "\t\t\t\telse" + "\n";
-							csFile += "\t\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
-							csFile += "\t\t\t}\n";
+							csFile += "\t\tstring[] " + variableName[cellColumnIndex] + "Array = sheet[row][column].Split(\',\');" + "\n";
+							csFile += "\t\tint " + variableName[cellColumnIndex] + "Count = " + variableName[cellColumnIndex] + "Array.Length;" + "\n";
+							csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++){" + "\n";
+							csFile += "\t\t\tif(i < " + variableName[cellColumnIndex] + "Count)" + "\n";
+							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableName[cellColumnIndex] + "Array[i];\n";
+							csFile += "\t\t\telse" + "\n";
+							csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
+							csFile += "\t\t}\n";
 						}
 					}
 					// JObject
 					if (variableType[cellColumnIndex].Equals("JObject"))
 					{
-						csFile += "\t\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++){" + "\n";
-						csFile += "\t\t\t\tJArray ja = (JArray)JsonConvert.DeserializeObject(sheet[row][column]);\n";
-						csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = (JObject)ja[i];\n";
-						csFile += "\t\t\t}\n";
+						csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++){" + "\n";
+						csFile += "\t\t\tJArray ja = (JArray)JsonConvert.DeserializeObject(sheet[row][column]);\n";
+						csFile += "\t\t\t" + variableName[cellColumnIndex] + "[i] = (JObject)ja[i];\n";
+						csFile += "\t\t}\n";
 					}
 
-					csFile += "\t\t\tcolumn++;\n";
+					csFile += "\t\tcolumn++;\n";
 					csFile += "\n";
 
 				}
 			}
-			csFile += "\t\t\treturn column;\n";
-			csFile += "\t\t}\n#endregion\n\n\n";
+			csFile += "\t\treturn column;\n";
+			csFile += "\n\t}\n#endif\n\n\n";
 
-			csFile += "\t}" + "\n";
+			csFile += "}" + "\n";
 			
 			// collection class
-			csFile += "\n\n\t[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
-			csFile += "\tpublic class " + GetCollectionClassName(fileName) + " : ScriptableObject\n";
-			csFile += "\t{\n";
-			csFile += "\t\tpublic List<" + GetClassName(fileName) + "> elements = new List<" + GetClassName(fileName) + ">();\n";
-			csFile += "\t}\n";
+			csFile += "\n\n[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
+			csFile += "public class " + GetAssetClassName(fileName) + " : BaseDataCollection\n";
+			csFile += "{\n";
+			csFile += "\tpublic List<" + GetDataClassName(fileName) + "> elements = new List<" + GetDataClassName(fileName) + ">();\n\n";
 
-			csFile += "}";
+			csFile += "\tpublic override void AddData(BaseData data)\n\t{\n\t\telements.Add(data as " + GetDataClassName(fileName) + ");\n\t}\n\n";
+			csFile += "\tpublic override int GetDataCount()\n\t{\n\t\treturn elements.Count;\n\t}\n\n";
+			csFile += "\tpublic override BaseData GetData(int index)\n\t{\n\t\treturn elements[index];\n\t}\n\n";
+
+			csFile += "}\n";
 			
 			return csFile;
 		}
@@ -278,14 +305,14 @@ public class Xlsx_ScriptableObject
 	}
 
 
-	static string GetClassName(string fileName)
+	static string GetDataClassName(string fileName)
 	{
 		return fileName + "_Data";
 	}
 
-	static string GetCollectionClassName(string fileName)
+	static string GetAssetClassName(string fileName)
 	{
-		return fileName + "_Collection";
+		return fileName + "_Asset";
 	}
 
 }
