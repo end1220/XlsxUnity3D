@@ -1,66 +1,78 @@
+
+
+// Auto generated file. DO NOT MODIFY.
+
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace Lite
 {
-	public class AutoGenMecanim_Data : IData
+	public class AutoGenMecanim_Data : BaseData
 	{
-		string _sourcePath;	//sourcePath
-		public string sourcePath { get { return _sourcePath;} }
+		public string sourcePath;
 
-		string _destPath;	//destPath
-		public string destPath { get { return _destPath;} }
+		public string destPath;
 
-		float _radius;	//radius
-		public float radius { get { return _radius;} }
+		public float radius;
 
-		float _height;	//height
-		public float height { get { return _height;} }
+		public float height;
 
-		string _weaponBone1;	//weaponBone1
-		public string weaponBone1 { get { return _weaponBone1;} }
+		public string weaponBone1;
 
-		string _weaponBone2;	//weaponBone2
-		public string weaponBone2 { get { return _weaponBone2;} }
+		public string weaponBone2;
 
-		public override int init(TabReader reader, int row, int column)
+
+
+		#region _init (Do not invoke it)
+		public override int _init(List<List<string>> sheet, int row, int column)
 		{
-			column = base.init(reader, row, column);
+			column = base._init(sheet, row, column);
 
-			if(reader.At(row, column) == null)
-				_sourcePath = "";
+			if(sheet[row][column] == null)
+				sourcePath = "";
 			else
-				_sourcePath = reader.At(row, column);
+				sourcePath = sheet[row][column];
 			column++;
 
-			if(reader.At(row, column) == null)
-				_destPath = "";
+			if(sheet[row][column] == null)
+				destPath = "";
 			else
-				_destPath = reader.At(row, column);
+				destPath = sheet[row][column];
 			column++;
 
-			_radius = 0;
-			float.TryParse(reader.At(row, column), out _radius);
+			radius = 0;
+			float.TryParse(sheet[row][column], out radius);
 			column++;
 
-			_height = 0;
-			float.TryParse(reader.At(row, column), out _height);
+			height = 0;
+			float.TryParse(sheet[row][column], out height);
 			column++;
 
-			if(reader.At(row, column) == null)
-				_weaponBone1 = "";
+			if(sheet[row][column] == null)
+				weaponBone1 = "";
 			else
-				_weaponBone1 = reader.At(row, column);
+				weaponBone1 = sheet[row][column];
 			column++;
 
-			if(reader.At(row, column) == null)
-				_weaponBone2 = "";
+			if(sheet[row][column] == null)
+				weaponBone2 = "";
 			else
-				_weaponBone2 = reader.At(row, column);
+				weaponBone2 = sheet[row][column];
 			column++;
 
 			return column;
 		}
+#endregion
+
+
+	}
+
+
+	[CreateAssetMenu(fileName = "new AutoGenMecanim", menuName = "Template/AutoGenMecanim", order = 999)]
+	public class AutoGenMecanim_Collection : ScriptableObject
+	{
+		public List<AutoGenMecanim_Data> elements = new List<AutoGenMecanim_Data>();
 	}
 }

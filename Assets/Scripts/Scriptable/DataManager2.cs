@@ -7,15 +7,13 @@ using System;
 using Lite;
 
 
-namespace TwGame
+namespace Lite
 {
 	using TemplateDic = Dictionary<int, ScriptableObject>;
 	public class DataManager2
 	{
 
 		private Dictionary<Type, TemplateDic> templatePool = new Dictionary<Type, TemplateDic>();
-
-		#region file path
 
 		private static Dictionary<Type, string> files = new Dictionary<Type, string>()
 		{
@@ -24,8 +22,6 @@ namespace TwGame
 			{typeof(Npc_Template), "Npc"},
 			{typeof(Item_Template), "Item"},*/
 		};
-
-		#endregion
 
 
 		void Awake()
@@ -52,9 +48,9 @@ namespace TwGame
 					string strTempPath = filePaths[i].Replace(@"\", "/");
 					strTempPath = strTempPath.Substring(strTempPath.IndexOf("Assets"));
 
-					BaseData tp = AssetDatabase.LoadAssetAtPath(strTempPath, typeof(ScriptableObject)) as BaseData;
+					BaseDataCollection tp = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(strTempPath);
 
-					soDic.Add(tp.id, tp);
+					//soDic.Add(tp.id, tp);
 				}
 				templatePool.Add(iter.Key as Type, soDic);
 			}

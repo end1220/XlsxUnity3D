@@ -4,9 +4,10 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace TwGame
+namespace Lite
 {
-	public abstract class BaseData : ScriptableObject
+	[Serializable]
+	public abstract class BaseData
 	{
 		public int id;
 

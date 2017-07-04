@@ -7,11 +7,11 @@ using UnityEngine;
 using UnityEditor;
 
 using Excel;
-using TwGame;
+using Lite;
 
 
 
-public class Xlsx_Asset
+public class Xlsx_ScriptableObject
 {
 	private static readonly int StartRow = 5;
 
@@ -68,19 +68,19 @@ public class Xlsx_Asset
 				Directory.Delete(targetDir, true);
 			Directory.CreateDirectory(targetDir);
 
-			for (int row = StartRow; row < sheetData.rowCount; ++row)
+			/*for (int row = StartRow; row < sheetData.rowCount; ++row)
 			{
 				for (int col = 0; col < sheetData.columnCount; ++col)
 					sheetData.At(row, col).Replace("\n", "\\n");
 
-				var asset = ScriptableObject.CreateInstance(GetClassName(fileName));
-				BaseData tp = asset as BaseData;
+				var asset = ScriptableObject.CreateInstance(GetCollectionClassName(fileName));
+				BaseDataCollection tp = asset as BaseDataCollection;
 				tp._init(sheetData.Table, row, 0);
 
 				string itemPath = targetDir + "/" + tp.id + ".asset";
 				itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
 				AssetDatabase.CreateAsset(asset, itemPath);
-			}
+			}*/
 			
 			AssetDatabase.Refresh();
 		}
@@ -97,12 +97,10 @@ public class Xlsx_Asset
 	{
 		try
 		{
-			string csFile = "\n\n// Auto generated. DO NOT MODIFY.\n\n";
+			string csFile = "\n\n// Auto generated file. DO NOT MODIFY.\n\n";
 
-			csFile += "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing UnityEngine;\n\n\n";
-
-			csFile += "namespace TwGame" + "\n";
-			csFile += "{\n\t[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
+			csFile += "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\n\n\n";
+			csFile += "namespace Lite\n{\n";
 			csFile += "\tpublic class " + GetClassName(fileName) + " : BaseData" + "\n";
 			csFile += "\t" + "{" + "\n";
 
@@ -252,8 +250,15 @@ public class Xlsx_Asset
 			csFile += "\t\t\treturn column;\n";
 			csFile += "\t\t}\n#endregion\n\n\n";
 
-
 			csFile += "\t}" + "\n";
+			
+			// collection class
+			csFile += "\n\n\t[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
+			csFile += "\tpublic class " + GetCollectionClassName(fileName) + " : ScriptableObject\n";
+			csFile += "\t{\n";
+			csFile += "\t\tpublic List<" + GetClassName(fileName) + "> elements = new List<" + GetClassName(fileName) + ">();\n";
+			csFile += "\t}\n";
+
 			csFile += "}";
 			
 			return csFile;
@@ -275,7 +280,12 @@ public class Xlsx_Asset
 
 	static string GetClassName(string fileName)
 	{
-		return fileName + "_Template";
+		return fileName + "_Data";
+	}
+
+	static string GetCollectionClassName(string fileName)
+	{
+		return fileName + "_Collection";
 	}
 
 }

@@ -1,64 +1,76 @@
+
+
+// Auto generated file. DO NOT MODIFY.
+
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace Lite
 {
-	public class Npc0_Data : IData
+	public class Npc0_Data : BaseData
 	{
-		string _res;	//res
-		public string res { get { return _res;} }
+		public string res;
 
-		string _path;	//path
-		public string path { get { return _path;} }
+		public string path;
 
-		string _ext;	//扩展
-		public string ext { get { return _ext;} }
+		public string ext;
 
-		int _pos;	//pos
-		public int pos { get { return _pos;} }
+		public int pos;
 
-		int _memType;	//生存时间
-		public int memType { get { return _memType;} }
+		public int memType;
 
-		int _poolSlotID;	//poolSlotID
-		public int poolSlotID { get { return _poolSlotID;} }
+		public int poolSlotID;
 
-		public override int init(TabReader reader, int row, int column)
+
+
+		#region _init (Do not invoke it)
+		public override int _init(List<List<string>> sheet, int row, int column)
 		{
-			column = base.init(reader, row, column);
+			column = base._init(sheet, row, column);
 
-			if(reader.At(row, column) == null)
-				_res = "";
+			if(sheet[row][column] == null)
+				res = "";
 			else
-				_res = reader.At(row, column);
+				res = sheet[row][column];
 			column++;
 
-			if(reader.At(row, column) == null)
-				_path = "";
+			if(sheet[row][column] == null)
+				path = "";
 			else
-				_path = reader.At(row, column);
+				path = sheet[row][column];
 			column++;
 
-			if(reader.At(row, column) == null)
-				_ext = "";
+			if(sheet[row][column] == null)
+				ext = "";
 			else
-				_ext = reader.At(row, column);
+				ext = sheet[row][column];
 			column++;
 
-			_pos = 0;
-			int.TryParse(reader.At(row, column), out _pos);
+			pos = 0;
+			int.TryParse(sheet[row][column], out pos);
 			column++;
 
-			_memType = 0;
-			int.TryParse(reader.At(row, column), out _memType);
+			memType = 0;
+			int.TryParse(sheet[row][column], out memType);
 			column++;
 
-			_poolSlotID = 0;
-			int.TryParse(reader.At(row, column), out _poolSlotID);
+			poolSlotID = 0;
+			int.TryParse(sheet[row][column], out poolSlotID);
 			column++;
 
 			return column;
 		}
+#endregion
+
+
+	}
+
+
+	[CreateAssetMenu(fileName = "new Npc0", menuName = "Template/Npc0", order = 999)]
+	public class Npc0_Collection : ScriptableObject
+	{
+		public List<Npc0_Data> elements = new List<Npc0_Data>();
 	}
 }

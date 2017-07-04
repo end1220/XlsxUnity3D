@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace TwGame
+namespace Lite
 {
 	[CreateAssetMenu(fileName = "new Npc0", menuName = "Template/Npc0", order = 999)]
 	public class Npc0_Template : BaseData

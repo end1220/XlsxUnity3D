@@ -34,10 +34,12 @@ public class XlsxMenuItems
 			string[] filePaths = Directory.GetFiles(folderPath);
 			for (int i = 0; i < filePaths.Length; ++i)
 			{
-				UpdateProgress(i, filePaths.Length, "");
-				string filePath = filePaths[i];
-				filePath = filePath.Replace("\\", "/");
-				Xlsx_Txt.xlsx_to_txt(filePath);
+				string filePath = filePaths[i].Replace("\\", "/"); ;
+				if (IsXlsxFile(filePath))
+				{
+					UpdateProgress(i, filePaths.Length, "");
+					Xlsx_Txt.xlsx_to_txt(filePath);
+				}
 			}
 
 			EditorUtility.ClearProgressBar();
@@ -77,10 +79,12 @@ public class XlsxMenuItems
 			string[] filePaths = Directory.GetFiles(folderPath);
 			for (int i = 0; i < filePaths.Length; ++i)
 			{
-				UpdateProgress(i, filePaths.Length, "");
-				string filePath = filePaths[i];
-				filePath = filePath.Replace("\\", "/");
-				Xlsx_Txt.xlsx_to_cs(filePath);
+				string filePath = filePaths[i].Replace("\\", "/"); ;
+				if (IsXlsxFile(filePath))
+				{
+					UpdateProgress(i, filePaths.Length, "");
+					Xlsx_Txt.xlsx_to_cs(filePath);
+				}
 			}
 
 			EditorUtility.ClearProgressBar();
@@ -102,7 +106,7 @@ public class XlsxMenuItems
 		string filePath = EditorUtility.OpenFilePanel("Import xlsx", String.Empty, "xlsx");
 		if (!string.IsNullOrEmpty(filePath))
 		{
-			Xlsx_Asset.xlsx_to_cs(filePath);
+			Xlsx_ScriptableObject.xlsx_to_cs(filePath);
 			AssetDatabase.Refresh();
 			UnityEngine.Debug.Log("Import xlsx done.");
 		}
@@ -120,10 +124,12 @@ public class XlsxMenuItems
 			string[] filePaths = Directory.GetFiles(folderPath);
 			for (int i = 0; i < filePaths.Length; ++i)
 			{
-				UpdateProgress(i, filePaths.Length, "");
-				string filePath = filePaths[i];
-				filePath = filePath.Replace("\\", "/");
-				Xlsx_Asset.xlsx_to_cs(filePath);
+				string filePath = filePaths[i].Replace("\\", "/"); ;
+				if (IsXlsxFile(filePath))
+				{
+					UpdateProgress(i, filePaths.Length, "");
+					Xlsx_ScriptableObject.xlsx_to_cs(filePath);
+				}
 			}
 
 			EditorUtility.ClearProgressBar();
@@ -145,7 +151,7 @@ public class XlsxMenuItems
 		string filePath = EditorUtility.OpenFilePanel("Import xlsx", String.Empty, "xlsx");
 		if (!string.IsNullOrEmpty(filePath))
 		{
-			Xlsx_Asset.xlsx_to_asset(filePath);
+			Xlsx_ScriptableObject.xlsx_to_asset(filePath);
 			AssetDatabase.Refresh();
 			UnityEngine.Debug.Log("Import xlsx done.");
 		}
@@ -163,10 +169,12 @@ public class XlsxMenuItems
 			string[] filePaths = Directory.GetFiles(folderPath);
 			for (int i = 0; i < filePaths.Length; ++i)
 			{
-				UpdateProgress(i, filePaths.Length, "");
-				string filePath = filePaths[i];
-				filePath = filePath.Replace("\\", "/");
-				Xlsx_Asset.xlsx_to_asset(filePath);
+				string filePath = filePaths[i].Replace("\\", "/"); ;
+				if (IsXlsxFile(filePath))
+				{
+					UpdateProgress(i, filePaths.Length, "");
+					Xlsx_ScriptableObject.xlsx_to_asset(filePath);
+				}
 			}
 
 			EditorUtility.ClearProgressBar();
@@ -181,6 +189,11 @@ public class XlsxMenuItems
 		}
 	}
 
+
+	static bool IsXlsxFile(string filePath)
+	{
+		return filePath.EndsWith(".xlsx");
+	}
 
 	static void UpdateProgress(int progress, int progressMax, string desc)
 	{
