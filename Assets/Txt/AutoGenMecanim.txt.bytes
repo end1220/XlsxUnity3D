@@ -1,8 +1,0 @@
-title	id	sourcePath	destPath	radius	height	weaponBone1	weaponBone2
-describe	id	sourcePath	destPath	radius	height	weaponBone1	weaponBone2
-备注	ID号	原始文件fbx路径(Assets内)	生成路径	半径/米	身高/米	武器点1	武器点1
-type	int	string	string	float	float	string	string
-default	0	""	""	0	0	""	""
-骷髅弓箭手	1	Art/Model/Skeleton/_source/Models/archer/skeleton_archer.fbx	Resources/Prefab/Npc/	0.4	1.75	Character1_LeftHandIndex1	Character1_RightHandIndex1
-骷髅法师	2	Art/Model/Skeleton/_source/Models/mage/skeleton_mage.fbx	Resources/Prefab/Npc/	0.4	1.75	Character1_LeftHandIndex1	Character1_RightHandIndex1
-骷髅战士	3	Art/Model/Skeleton/_source/Models/warrior/skeleton_warrior.fbx	Resources/Prefab/Npc/	0.4	1.75	Character1_LeftHandIndex1	Character1_RightHandIndex1
