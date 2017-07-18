@@ -16,22 +16,26 @@ namespace Lite
 
 		private static Dictionary<Type, string> files = new Dictionary<Type, string>()
 		{
-			//{typeof(Npc0_Data), "Npc0"},
+			{typeof(Npc0_Data), "Npc0.asset"},
 		};
 
 
 		public void Init()
 		{
-			string scriptObjPath = "Assets/scriptable/";
+			string scriptObjPath = "Assets" + XlsxConst.OutputAssetPath;
 
 			IDictionaryEnumerator iter = files.GetEnumerator();
 			while (iter.MoveNext())
 			{
-				string filePath = iter.Value as string;
+				string filePath = scriptObjPath + (iter.Value as string);
 
+				var collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(filePath);
+				if (collection == null)
+				{
+					Debug.LogError("DataManager: Load asset error, " + filePath);
+					continue;
+				}
 				DataDic soDic = new DataDic();
-
-				BaseDataCollection collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(scriptObjPath + filePath + ".asset");
 				for (int i = 0; i < collection.GetDataCount(); ++i)
 				{
 					BaseData data = collection.GetData(i);
@@ -55,6 +59,15 @@ namespace Lite
 			}
 			return null;
 		}
+
+
+		public DataDic GetList<T>() where T : BaseData
+		{
+			DataDic soDic = null;
+			dataPool.TryGetValue(typeof(T), out soDic);
+			return soDic;
+		}
+
 
 
 	}
