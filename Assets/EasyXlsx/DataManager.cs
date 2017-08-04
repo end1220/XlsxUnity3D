@@ -1,28 +1,33 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.IO;
+﻿
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System;
-using Lite;
+using UnityEditor;
+using UnityEngine;
 
 
-namespace Lite
+
+namespace EasyXlsx
 {
+
 	using DataDic = Dictionary<int, BaseData>;
+
+	/// <summary>
+	/// Data manager for xlsx
+	/// </summary>
 	public class DataManager
 	{
 		private Dictionary<Type, DataDic> dataPool = new Dictionary<Type, DataDic>();
 
 		private static Dictionary<Type, string> files = new Dictionary<Type, string>()
 		{
-			{typeof(Npc0_Data), "Npc0.asset"},
+			{typeof(Npc0Data), "Npc0.asset"},
 		};
 
 
 		public void Init()
 		{
-			string scriptObjPath = "Assets" + XlsxConst.OutputAssetPath;
+			string scriptObjPath = "Assets" + Confiig.OutputAssetPath;
 
 			IDictionaryEnumerator iter = files.GetEnumerator();
 			while (iter.MoveNext())

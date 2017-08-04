@@ -1,15 +1,14 @@
 
-
 // Auto generated file. DO NOT MODIFY.
 
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Lite;
+using EasyXlsx;
 
 
 [Serializable]
-public class Npc0_Data : BaseData
+public class Npc0Data : BaseData
 {
 	public string res;
 
@@ -25,8 +24,7 @@ public class Npc0_Data : BaseData
 
 
 
-	#if UNITY_EDITOR
-
+#if UNITY_EDITOR
 	public override int _init(List<List<string>> sheet, int row, int column)
 	{
 		column = base._init(sheet, row, column);
@@ -68,16 +66,13 @@ public class Npc0_Data : BaseData
 
 
 }
-
-
-[CreateAssetMenu(fileName = "new Npc0", menuName = "Template/Npc0", order = 999)]
-public class Npc0_Asset : BaseDataCollection
+public class Npc0Asset : BaseDataCollection
 {
-	public List<Npc0_Data> elements = new List<Npc0_Data>();
+	public List<Npc0Data> elements = new List<Npc0Data>();
 
 	public override void AddData(BaseData data)
 	{
-		elements.Add(data as Npc0_Data);
+		elements.Add(data as Npc0Data);
 	}
 
 	public override int GetDataCount()

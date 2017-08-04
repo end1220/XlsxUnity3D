@@ -1,6 +1,6 @@
 ﻿
 using UnityEngine;
-using Lite;
+using EasyXlsx;
 
 
 public class Example : MonoBehaviour
@@ -11,15 +11,15 @@ public class Example : MonoBehaviour
 		DataManager mgr = new DataManager();
 		mgr.Init();
 
-		var npc = mgr.Get<Npc0_Data>(6000);
+		/*var npc = mgr.Get<Npc0Data>(6000);
 		Debug.Log(npc.res);
 
-		var dic = mgr.GetList<Npc0_Data>();
+		var dic = mgr.GetList<Npc0Data>();
 		foreach (var item in dic.Values)
 		{
-			Npc0_Data np = item as Npc0_Data;
+			Npc0Data np = item as Npc0Data;
 			Debug.Log(np.res);
-		}
+		}*/
 	}
 
 
