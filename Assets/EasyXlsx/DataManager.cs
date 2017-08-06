@@ -13,23 +13,49 @@ namespace EasyXlsx
 	using DataDic = Dictionary<int, BaseData>;
 
 	/// <summary>
+	/// Base data class
+	/// </summary>
+	[Serializable]
+	public abstract class BaseData
+	{
+		public int id;
+
+		public virtual int _init(List<List<string>> sheet, int row, int column)
+		{
+			column++;
+			id = 0;
+			int.TryParse(sheet[row][column++], out id);
+			return column;
+		}
+
+	}
+
+	/// <summary>
+	/// Base class of asset files.
+	/// </summary>
+	public abstract class BaseDataCollection : ScriptableObject
+	{
+		public abstract void AddData(BaseData data);
+
+		public abstract int GetDataCount();
+
+		public abstract BaseData GetData(int index);
+
+	}
+
+	/// <summary>
 	/// Data manager for xlsx
 	/// </summary>
 	public class DataManager
 	{
 		private Dictionary<Type, DataDic> dataPool = new Dictionary<Type, DataDic>();
 
-		private static Dictionary<Type, string> files = new Dictionary<Type, string>()
-		{
-			{typeof(Npc0Data), "Npc0.asset"},
-		};
-
-
+		
 		public void Init()
 		{
-			string scriptObjPath = "Assets" + Confiig.OutputAssetPath;
+			string scriptObjPath = "Assets" + Config.AssetPath;
 
-			IDictionaryEnumerator iter = files.GetEnumerator();
+			IDictionaryEnumerator iter = ClassList.files.GetEnumerator();
 			while (iter.MoveNext())
 			{
 				string filePath = scriptObjPath + (iter.Value as string);

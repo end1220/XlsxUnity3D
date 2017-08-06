@@ -11,7 +11,8 @@ namespace EasyXlsx
 	/// </summary>
 	public class XlsxConverter
 	{
-		
+		const int StartRow = 5;
+
 		public static void ToAsset(string srcFilePath, string outputPath)
 		{
 			try
@@ -42,7 +43,6 @@ namespace EasyXlsx
 				streamwriter.Write(txt);
 				streamwriter.Flush();
 				streamwriter.Close();
-
 			}
 			catch (Exception e)
 			{
@@ -75,7 +75,7 @@ namespace EasyXlsx
 
 				System.Reflection.ConstructorInfo dataCtor = dataType.GetConstructor(Type.EmptyTypes);
 
-				for (int row = Confiig.StartRow; row < sheetData.rowCount; ++row)
+				for (int row = StartRow; row < sheetData.rowCount; ++row)
 				{
 					for (int col = 0; col < sheetData.columnCount; ++col)
 						sheetData.At(row, col).Replace("\n", "\\n");
@@ -85,7 +85,7 @@ namespace EasyXlsx
 					dataCollect.AddData(inst);
 				}
 
-				string itemPath = outputPath + fileName + ".asset";
+				string itemPath = outputPath + GetAssetName(fileName);
 				itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
 				AssetDatabase.CreateAsset(asset, itemPath);
 
@@ -275,6 +275,44 @@ namespace EasyXlsx
 		}
 
 
+		private static string GetClassListHead()
+		{
+			string csFile = "\n// Auto generated file. DO NOT MODIFY.\n\nusing System;\nusing System.Collections.Generic;\n\n\n";
+			csFile += "namespace EasyXlsx\n{\n\n\tpublic class ClassList\n\t{\n\t\tpublic static Dictionary<Type, string> files = new Dictionary<Type, string>()\n\t\t{";
+			return csFile;
+		}
+
+		private static string GetClassListTail()
+		{
+			string csFile = "\n\t\t};\n\t}\n\n}";
+			return csFile;
+		}
+
+
+		public static void ClearClassList(string outputPath)
+		{
+			string csFile = GetClassListHead() + GetClassListTail();
+			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetClassListName(), false);
+			streamwriter.Write(csFile);
+			streamwriter.Flush();
+			streamwriter.Close();
+		}
+
+
+		public static void GenerateClassList(string[] fileNames, string outputPath)
+		{
+			string csFile = GetClassListHead();
+			foreach (var name in fileNames)
+				csFile += "\n\t\t\t{typeof(" + GetDataClassName(name) + "), \"" + GetAssetName(name) + "\"},";
+			csFile += GetClassListTail();
+
+			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetClassListName(), false);
+			streamwriter.Write(csFile);
+			streamwriter.Flush();
+			streamwriter.Close();
+		}
+
+
 		static void UpdateProgress(int progress, int progressMax, string desc)
 		{
 			string title = "Processing...[" + progress + " - " + progressMax + "]";
@@ -291,6 +329,16 @@ namespace EasyXlsx
 		static string GetAssetClassName(string fileName)
 		{
 			return fileName + "Asset";
+		}
+
+		static string GetAssetName(string fileName)
+		{
+			return fileName + ".asset";
+		}
+
+		public static string GetClassListName()
+		{
+			return "ClassList.cs";
 		}
 
 	}
