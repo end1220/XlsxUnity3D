@@ -53,14 +53,17 @@ namespace EasyXlsx
 		
 		public void Init()
 		{
-			string scriptObjPath = "Assets" + Config.AssetPath;
-
-			IDictionaryEnumerator iter = ClassList.files.GetEnumerator();
-			while (iter.MoveNext())
+			foreach (var item in ClassList.files)
 			{
-				string filePath = scriptObjPath + (iter.Value as string);
-
-				var collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(filePath);
+				string filePath;
+				BaseDataCollection collection = null;
+#if UNITY_EDITOR
+				filePath = "Assets" + Config.AssetPath + item.Value;
+				collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(filePath);
+#else
+				filePath = "Template" + item.Value;
+				collection = Resources.Load(filePath) as BaseDataCollection;
+#endif
 				if (collection == null)
 				{
 					Debug.LogError("DataManager: Load asset error, " + filePath);
@@ -73,7 +76,7 @@ namespace EasyXlsx
 					soDic.Add(data.id, data);
 				}
 
-				dataPool.Add(iter.Key as Type, soDic);
+				dataPool.Add(item.Key, soDic);
 			}
 		}
 
