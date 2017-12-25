@@ -1,10 +1,10 @@
-﻿
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
-using UnityEngine;
 
+﻿using UnityEditor;
+using UnityEngine;
+using System.Linq;
+using System.Reflection;
+using System.Collections.Generic;
+using System;
 
 
 namespace EasyXlsx
@@ -27,7 +27,6 @@ namespace EasyXlsx
 			int.TryParse(sheet[row][column++], out id);
 			return column;
 		}
-
 	}
 
 	/// <summary>
@@ -51,17 +50,24 @@ namespace EasyXlsx
 		private Dictionary<Type, DataDic> dataPool = new Dictionary<Type, DataDic>();
 
 		
-		public void Init()
+		public void Load()
 		{
-			foreach (var item in ClassList.files)
+			string dataRootPath = "Assets" + Config.AssetPath;
+
+			Type baseType = typeof(BaseDataCollection);
+			Assembly assembly = baseType.Assembly;
+			foreach (Type type in assembly.GetTypes().Where(t => t.IsSubclassOf(baseType)))
 			{
+				string collectionClassName = type.Name;
+				string headName = collectionClassName.Substring(0, collectionClassName.IndexOf("Asset"));
+
 				string filePath;
 				BaseDataCollection collection = null;
 #if UNITY_EDITOR
-				filePath = "Assets" + Config.AssetPath + item.Value;
+				filePath = dataRootPath + headName + ".asset";
 				collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(filePath);
 #else
-				filePath = "Template" + item.Value;
+				filePath = "Template" + headName + ".asset";
 				collection = Resources.Load(filePath) as BaseDataCollection;
 #endif
 				if (collection == null)
@@ -69,17 +75,17 @@ namespace EasyXlsx
 					Debug.LogError("DataManager: Load asset error, " + filePath);
 					continue;
 				}
-				DataDic soDic = new DataDic();
+				DataDic dataDic = new DataDic();
 				for (int i = 0; i < collection.GetDataCount(); ++i)
 				{
 					BaseData data = collection.GetData(i);
-					soDic.Add(data.id, data);
+					dataDic.Add(data.id, data);
 				}
 
-				dataPool.Add(item.Key, soDic);
+				Type dataClassType = Type.GetType(headName + "Data");
+				dataPool.Add(dataClassType, dataDic);
 			}
 		}
-
 
 		public T Get<T>(int id) where T : BaseData
 		{
@@ -94,15 +100,11 @@ namespace EasyXlsx
 			return null;
 		}
 
-
 		public DataDic GetList<T>() where T : BaseData
 		{
 			DataDic soDic = null;
 			dataPool.TryGetValue(typeof(T), out soDic);
 			return soDic;
 		}
-
-
-
 	}
 }

@@ -5,7 +5,6 @@ using Excel;
 using System.Data;
 
 
-
 namespace EasyXlsx
 {
 	/// <summary>
