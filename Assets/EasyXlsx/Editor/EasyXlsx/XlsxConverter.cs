@@ -13,13 +13,13 @@ namespace EasyXlsx
 	{
 		const int StartRow = 5;
 
-		public static void ToAsset(string srcFilePath, string outputPath)
+		public static void ToAsset(string xlsxPath, string outputPath)
 		{
 			try
 			{
-				int index = srcFilePath.LastIndexOf("/") + 1;
-				string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
-				var sheetData = XlsxReader.Instance.AsStringArray(srcFilePath);
+				int index = xlsxPath.LastIndexOf("/") + 1;
+				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
+				var sheetData = XlsxReader.Instance.AsStringArray(xlsxPath);
 
 				ToAsset(fileName, outputPath, sheetData);
 			}
@@ -31,13 +31,13 @@ namespace EasyXlsx
 		}
 
 
-		public static void ToCSharp(string srcFilePath, string outputPath)
+		public static void ToCSharp(string xlsxPath, string outputPath)
 		{
 			try
 			{
-				int index = srcFilePath.LastIndexOf("/") + 1;
-				string fileName = srcFilePath.Substring(index, srcFilePath.LastIndexOf(".") - index);
-				var sheetData = XlsxReader.Instance.AsStringArray(srcFilePath);
+				int index = xlsxPath.LastIndexOf("/") + 1;
+				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
+				var sheetData = XlsxReader.Instance.AsStringArray(xlsxPath);
 				string txt = ToCSharp(sheetData, fileName);
 				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetAssetClassName(fileName) + ".cs", false);
 				streamwriter.Write(txt);
@@ -50,7 +50,6 @@ namespace EasyXlsx
 				AssetDatabase.Refresh();
 			}
 		}
-
 
 
 		public static void ToAsset(string fileName, string outputPath, XlsxReader.SheetData sheetData)
@@ -273,45 +272,6 @@ namespace EasyXlsx
 				throw new System.IO.IOException(ex.Message);
 			}
 		}
-
-
-		private static string GetClassListHead()
-		{
-			string csFile = "\n// Auto generated file. DO NOT MODIFY.\n\nusing System;\nusing System.Collections.Generic;\n\n\n";
-			csFile += "namespace EasyXlsx\n{\n\n\tpublic class ClassList\n\t{\n\t\tpublic static Dictionary<Type, string> files = new Dictionary<Type, string>()\n\t\t{";
-			return csFile;
-		}
-
-		private static string GetClassListTail()
-		{
-			string csFile = "\n\t\t};\n\t}\n\n}";
-			return csFile;
-		}
-
-
-		public static void ClearClassList(string outputPath)
-		{
-			string csFile = GetClassListHead() + GetClassListTail();
-			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetClassListName(), false);
-			streamwriter.Write(csFile);
-			streamwriter.Flush();
-			streamwriter.Close();
-		}
-
-
-		public static void GenerateClassList(string[] fileNames, string outputPath)
-		{
-			string csFile = GetClassListHead();
-			foreach (var name in fileNames)
-				csFile += "\n\t\t\t{typeof(" + GetDataClassName(name) + "), \"" + GetAssetName(name) + "\"},";
-			csFile += GetClassListTail();
-
-			System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetClassListName(), false);
-			streamwriter.Write(csFile);
-			streamwriter.Flush();
-			streamwriter.Close();
-		}
-
 
 		static void UpdateProgress(int progress, int progressMax, string desc)
 		{

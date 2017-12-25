@@ -11,7 +11,7 @@ public class Example : MonoBehaviour
 		DataManager mgr = new DataManager();
 		mgr.Load();
 
-		var npc = mgr.Get<Npc0Data>(6000);
+		/*var npc = mgr.Get<Npc0Data>(6000);
 		Debug.Log(npc.res);
 
 		var dic = mgr.GetList<Npc0Data>();
@@ -19,7 +19,7 @@ public class Example : MonoBehaviour
 		{
 			Npc0Data np = item as Npc0Data;
 			Debug.Log(np.res);
-		}
+		}*/
 	}
 
 
