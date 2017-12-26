@@ -7,22 +7,8 @@ using System.Data;
 
 namespace EasyExcel
 {
-	/// <summary>
-	/// Xlsx Reader
-	/// </summary>
 	public class ExcelReader
 	{
-		private static ExcelReader inst = null;
-		public static ExcelReader Instance
-		{
-			get
-			{
-				if (inst == null)
-					inst = new ExcelReader();
-				return inst;
-			}
-		}
-
 		public class SheetData
 		{
 			public int rowCount = 0;
@@ -41,12 +27,12 @@ namespace EasyExcel
 		}
 
 		/// <summary>
-		/// get data from xlsx file by sheet.
+		/// get data from Excel file by sheet.
 		/// </summary>
 		/// <param name="filePath">absolute file path on the disk</param>
 		/// <param name="sheet">sheet index, from 0 to max</param>
 		/// <returns></returns>
-		public SheetData AsStringArray(string filePath, int sheet = 0)
+		public static SheetData AsStringArray(string filePath, int sheet = 0)
 		{
 			FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
 			IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
@@ -88,7 +74,7 @@ namespace EasyExcel
 			return sheetData;
 		}
 
-		public DataTable GetDataTable(string filePath)
+		public static DataTable GetDataTable(string filePath)
 		{
 			FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
 			IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);

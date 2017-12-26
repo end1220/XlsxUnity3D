@@ -52,7 +52,7 @@ namespace EasyExcel
 		
 		public void Load()
 		{
-			string dataRootPath = "Assets" + Config.AssetPath;
+			string dataRootPath = "Assets" + Config.Instance.AssetPath;
 
 			Type baseType = typeof(DataCollection);
 			Assembly assembly = baseType.Assembly;

@@ -19,7 +19,7 @@ namespace EasyExcel
 			{
 				int index = xlsxPath.LastIndexOf("/") + 1;
 				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
-				var sheetData = ExcelReader.Instance.AsStringArray(xlsxPath);
+				var sheetData = ExcelReader.AsStringArray(xlsxPath);
 
 				ToAsset(fileName, outputPath, sheetData);
 			}
@@ -36,7 +36,7 @@ namespace EasyExcel
 			{
 				int index = xlsxPath.LastIndexOf("/") + 1;
 				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
-				var sheetData = ExcelReader.Instance.AsStringArray(xlsxPath);
+				var sheetData = ExcelReader.AsStringArray(xlsxPath);
 				string txt = ToCSharp(sheetData, fileName);
 				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetAssetClassName(fileName) + ".cs", false);
 				streamwriter.Write(txt);

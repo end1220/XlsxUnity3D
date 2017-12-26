@@ -28,18 +28,21 @@ namespace EasyExcel
 
 		void OnEnable()
 		{
-			sourceXlsxPath = EditorPrefs.GetString("XlsxPath", null);
-			outputCSPath = EditorPrefs.GetString("genCodePath", null);
-			outputAssetPath = EditorPrefs.GetString("assetPath", null);
-			if (string.IsNullOrEmpty(outputAssetPath))
-				outputAssetPath = Application.dataPath + Config.AssetPath;
+			sourceXlsxPath = Config.Instance.ExcelPath;// EditorPrefs.GetString("XlsxPath", null);
+			outputCSPath = Config.Instance.CSharpPath;// EditorPrefs.GetString("genCodePath", null);
+			outputAssetPath = Config.Instance.AssetPath;// EditorPrefs.GetString("assetPath", null);
+			//if (string.IsNullOrEmpty(outputAssetPath))
+			//	outputAssetPath = Application.dataPath + Config.AssetPath;
 		}
 
 		private void SavePrefs()
 		{
-			EditorPrefs.SetString("XlsxPath", sourceXlsxPath);
+			Config.Instance.ExcelPath = sourceXlsxPath;
+			Config.Instance.CSharpPath = outputCSPath;
+			Config.Instance.AssetPath = outputAssetPath;
+			/*EditorPrefs.SetString("XlsxPath", sourceXlsxPath);
 			EditorPrefs.SetString("genCodePath", outputCSPath);
-			EditorPrefs.SetString("assetPath", outputAssetPath);
+			EditorPrefs.SetString("assetPath", outputAssetPath);*/
 		}
 
 		private void OnDestroy()
