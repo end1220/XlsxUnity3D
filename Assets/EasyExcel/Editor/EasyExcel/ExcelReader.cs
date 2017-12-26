@@ -5,24 +5,23 @@ using Excel;
 using System.Data;
 
 
-namespace EasyXlsx
+namespace EasyExcel
 {
 	/// <summary>
 	/// Xlsx Reader
 	/// </summary>
-	public class XlsxReader
+	public class ExcelReader
 	{
-		private static XlsxReader inst = null;
-		public static XlsxReader Instance
+		private static ExcelReader inst = null;
+		public static ExcelReader Instance
 		{
 			get
 			{
 				if (inst == null)
-					inst = new XlsxReader();
+					inst = new ExcelReader();
 				return inst;
 			}
 		}
-
 
 		public class SheetData
 		{
@@ -40,7 +39,6 @@ namespace EasyXlsx
 			}
 
 		}
-
 
 		/// <summary>
 		/// get data from xlsx file by sheet.
@@ -89,7 +87,6 @@ namespace EasyXlsx
 
 			return sheetData;
 		}
-
 
 		public DataTable GetDataTable(string filePath)
 		{

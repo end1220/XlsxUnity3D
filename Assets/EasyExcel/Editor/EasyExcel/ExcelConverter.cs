@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace EasyXlsx
+namespace EasyExcel
 {
 	/// <summary>
-	/// Xlsx Converter
+	/// Excel Converter
 	/// </summary>
-	public class XlsxConverter
+	public class ExcelConverter
 	{
-		const int StartRow = 5;
+		const int StartRow = 3;
 
 		public static void ToAsset(string xlsxPath, string outputPath)
 		{
@@ -19,7 +19,7 @@ namespace EasyXlsx
 			{
 				int index = xlsxPath.LastIndexOf("/") + 1;
 				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
-				var sheetData = XlsxReader.Instance.AsStringArray(xlsxPath);
+				var sheetData = ExcelReader.Instance.AsStringArray(xlsxPath);
 
 				ToAsset(fileName, outputPath, sheetData);
 			}
@@ -30,14 +30,13 @@ namespace EasyXlsx
 			}
 		}
 
-
 		public static void ToCSharp(string xlsxPath, string outputPath)
 		{
 			try
 			{
 				int index = xlsxPath.LastIndexOf("/") + 1;
 				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
-				var sheetData = XlsxReader.Instance.AsStringArray(xlsxPath);
+				var sheetData = ExcelReader.Instance.AsStringArray(xlsxPath);
 				string txt = ToCSharp(sheetData, fileName);
 				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetAssetClassName(fileName) + ".cs", false);
 				streamwriter.Write(txt);
@@ -51,13 +50,12 @@ namespace EasyXlsx
 			}
 		}
 
-
-		public static void ToAsset(string fileName, string outputPath, XlsxReader.SheetData sheetData)
+		public static void ToAsset(string fileName, string outputPath, ExcelReader.SheetData sheetData)
 		{
 			try
 			{
 				var asset = ScriptableObject.CreateInstance(GetAssetClassName(fileName));
-				BaseDataCollection dataCollect = asset as BaseDataCollection;
+				DataCollection dataCollect = asset as DataCollection;
 
 				string className = GetDataClassName(fileName);
 				Type dataType = Type.GetType(className);
@@ -79,7 +77,7 @@ namespace EasyXlsx
 					for (int col = 0; col < sheetData.columnCount; ++col)
 						sheetData.At(row, col).Replace("\n", "\\n");
 
-					BaseData inst = dataCtor.Invoke(null) as BaseData;
+					SingleData inst = dataCtor.Invoke(null) as SingleData;
 					inst._init(sheetData.Table, row, 0);
 					dataCollect.AddData(inst);
 				}
@@ -97,16 +95,15 @@ namespace EasyXlsx
 
 		}
 
-
-		private static string ToCSharp(XlsxReader.SheetData sheetData, string fileName)
+		private static string ToCSharp(ExcelReader.SheetData sheetData, string fileName)
 		{
 			try
 			{
 				string csFile = "\n// Auto generated file. DO NOT MODIFY.\n\n";
 
-				csFile += "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\nusing EasyXlsx;\n\n\n";
+				csFile += "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\nusing EasyExcel;\n\n\n";
 				csFile += "[Serializable]\n";
-				csFile += "public class " + GetDataClassName(fileName) + " : BaseData" + "\n";
+				csFile += "public class " + GetDataClassName(fileName) + " : SingleData" + "\n";
 				csFile += "" + "{" + "\n";
 
 				int columnCount = sheetData.columnCount;
@@ -164,7 +161,7 @@ namespace EasyXlsx
 				}
 
 				string[] variableDefaultValue = new string[columnCount];
-				csFile += "\n\n#if UNITY_EDITOR\n";
+				csFile += "#if UNITY_EDITOR\n";
 				csFile += "\tpublic override int _init(List<List<string>> sheet, int row, int column)" + "\n";
 				csFile += "\t{" + "\n";
 				csFile += "\t\tcolumn = base._init(sheet, row, column);\n\n";
@@ -249,37 +246,30 @@ namespace EasyXlsx
 					}
 				}
 				csFile += "\t\treturn column;\n";
-				csFile += "\n\t}\n#endif\n\n\n";
+				csFile += "\n\t}\n#endif\n";
 
-				csFile += "}" + "\n";
+				csFile += "}\n\n";
 
 				// collection class
 				//csFile += "\n\n[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
-				csFile += "public class " + GetAssetClassName(fileName) + " : BaseDataCollection\n";
+				csFile += "public class " + GetAssetClassName(fileName) + " : DataCollection\n";
 				csFile += "{\n";
 				csFile += "\tpublic List<" + GetDataClassName(fileName) + "> elements = new List<" + GetDataClassName(fileName) + ">();\n\n";
 
-				csFile += "\tpublic override void AddData(BaseData data)\n\t{\n\t\telements.Add(data as " + GetDataClassName(fileName) + ");\n\t}\n\n";
+				csFile += "\tpublic override void AddData(SingleData data)\n\t{\n\t\telements.Add(data as " + GetDataClassName(fileName) + ");\n\t}\n\n";
 				csFile += "\tpublic override int GetDataCount()\n\t{\n\t\treturn elements.Count;\n\t}\n\n";
-				csFile += "\tpublic override BaseData GetData(int index)\n\t{\n\t\treturn elements[index];\n\t}\n\n";
+				csFile += "\tpublic override SingleData GetData(int index)\n\t{\n\t\treturn elements[index];\n\t}\n";
 
 				csFile += "}\n";
 
 				return csFile;
 			}
-			catch (System.IO.IOException ex)
+			catch (Exception ex)
 			{
-				throw new System.IO.IOException(ex.Message);
+				Debug.LogError(ex.ToString());
 			}
+			return "";
 		}
-
-		static void UpdateProgress(int progress, int progressMax, string desc)
-		{
-			string title = "Processing...[" + progress + " - " + progressMax + "]";
-			float value = (float)progress / (float)progressMax;
-			EditorUtility.DisplayProgressBar(title, desc, value);
-		}
-
 
 		static string GetDataClassName(string fileName)
 		{
@@ -294,11 +284,6 @@ namespace EasyXlsx
 		static string GetAssetName(string fileName)
 		{
 			return fileName + ".asset";
-		}
-
-		public static string GetClassListName()
-		{
-			return "ClassList.cs";
 		}
 
 	}

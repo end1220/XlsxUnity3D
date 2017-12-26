@@ -7,16 +7,16 @@ using System.Collections.Generic;
 using System;
 
 
-namespace EasyXlsx
+namespace EasyExcel
 {
 
-	using DataDic = Dictionary<int, BaseData>;
+	using DataDic = Dictionary<int, SingleData>;
 
 	/// <summary>
-	/// Base data class
+	/// A piece of data represents a row in excel.
 	/// </summary>
 	[Serializable]
-	public abstract class BaseData
+	public abstract class SingleData
 	{
 		public int id;
 
@@ -30,15 +30,15 @@ namespace EasyXlsx
 	}
 
 	/// <summary>
-	/// Base class of asset files.
+	/// Collection of SingleData
 	/// </summary>
-	public abstract class BaseDataCollection : ScriptableObject
+	public abstract class DataCollection : ScriptableObject
 	{
-		public abstract void AddData(BaseData data);
+		public abstract void AddData(SingleData data);
 
 		public abstract int GetDataCount();
 
-		public abstract BaseData GetData(int index);
+		public abstract SingleData GetData(int index);
 
 	}
 
@@ -54,7 +54,7 @@ namespace EasyXlsx
 		{
 			string dataRootPath = "Assets" + Config.AssetPath;
 
-			Type baseType = typeof(BaseDataCollection);
+			Type baseType = typeof(DataCollection);
 			Assembly assembly = baseType.Assembly;
 			foreach (Type type in assembly.GetTypes().Where(t => t.IsSubclassOf(baseType)))
 			{
@@ -62,13 +62,13 @@ namespace EasyXlsx
 				string headName = collectionClassName.Substring(0, collectionClassName.IndexOf("Asset"));
 
 				string filePath;
-				BaseDataCollection collection = null;
+				DataCollection collection = null;
 #if UNITY_EDITOR
 				filePath = dataRootPath + headName + ".asset";
-				collection = AssetDatabase.LoadAssetAtPath<BaseDataCollection>(filePath);
+				collection = AssetDatabase.LoadAssetAtPath(filePath, typeof(DataCollection)) as DataCollection;
 #else
 				filePath = "Template" + headName + ".asset";
-				collection = Resources.Load(filePath) as BaseDataCollection;
+				collection = Resources.Load(filePath) as DataCollection;
 #endif
 				if (collection == null)
 				{
@@ -78,7 +78,7 @@ namespace EasyXlsx
 				DataDic dataDic = new DataDic();
 				for (int i = 0; i < collection.GetDataCount(); ++i)
 				{
-					BaseData data = collection.GetData(i);
+					SingleData data = collection.GetData(i);
 					dataDic.Add(data.id, data);
 				}
 
@@ -87,20 +87,20 @@ namespace EasyXlsx
 			}
 		}
 
-		public T Get<T>(int id) where T : BaseData
+		public T Get<T>(int id) where T : SingleData
 		{
 			DataDic soDic = null;
 			dataPool.TryGetValue(typeof(T), out soDic);
 			if (soDic != null)
 			{
-				BaseData data = null;
+				SingleData data = null;
 				soDic.TryGetValue(id, out data);
 				return data as T;
 			}
 			return null;
 		}
 
-		public DataDic GetList<T>() where T : BaseData
+		public DataDic GetList<T>() where T : SingleData
 		{
 			DataDic soDic = null;
 			dataPool.TryGetValue(typeof(T), out soDic);

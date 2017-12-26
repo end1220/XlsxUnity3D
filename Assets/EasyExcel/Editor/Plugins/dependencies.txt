@@ -1,0 +1,5 @@
+EasyExcel uses ExcelDataReader to handle reading excel files.
+It's license are included in the ExcelDataReader folder.
+
+The ExcelDataReader is hosted at github:
+	https://github.com/ExcelDataReader/ExcelDataReader

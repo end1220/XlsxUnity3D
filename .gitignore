@@ -9,3 +9,9 @@ UpgradeLog.htm
 XlsxUnity3D.Editor.csproj
 XlsxUnity3D.csproj
 .vs/
+XlsxUnity3D-csharp.sln
+Assembly-CSharp.csproj
+Assembly-CSharp-vs.csproj
+Assembly-CSharp-Editor.csproj
+Assembly-CSharp-Editor-vs.csproj
+obj/

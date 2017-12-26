@@ -7,22 +7,22 @@ using UnityEditor;
 
 
 
-namespace EasyXlsx
+namespace EasyExcel
 {
 	/// <summary>
 	/// Xlsx converter window
 	/// </summary>
-	public class XlsxConverterWindow : EditorWindow
+	public class ExcelConverterWindow : EditorWindow
 	{
 		string sourceXlsxPath;
 		string outputCSPath;
 		string outputAssetPath;
 
-		[MenuItem(@"Tools/EasyXlsx")]
+		[MenuItem(@"Tools/EasyExcel")]
 		public static void ShowExcelWindow()
 		{
 			Rect wr = new Rect(100, 100, 640, 480);
-			var window = (XlsxConverterWindow)EditorWindow.GetWindowWithRect(typeof(XlsxConverterWindow), wr, true, "EasyXlsx");
+			var window = (ExcelConverterWindow)EditorWindow.GetWindowWithRect(typeof(ExcelConverterWindow), wr, true, "EasyExcel");
 			window.Show();
 		}
 
@@ -51,21 +51,21 @@ namespace EasyXlsx
 		{
 			float spaceSize = 10f;
 			float leftSpace = 10;
-			float titleLen = 70;
+			float titleLen = 80;
 			float textLen = 450;
 			float buttonLen1 = 120;
 			float buttonLen2 = 80;
 			float buttonHeight = 40;
 
-			GUILayout.Label("  Import *.xlsx files as *.cs and *.asset.\n", EditorStyles.helpBox);
+			GUILayout.Label("  Import excel files as *.cs and *.asset.\n", EditorStyles.helpBox);
 			GUILayout.Space(spaceSize);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(leftSpace);
-			GUILayout.Label("Xlsx path", EditorStyles.label, GUILayout.Width(titleLen));
+			GUILayout.Label("xls/xlsx path", EditorStyles.label, GUILayout.Width(titleLen));
 			sourceXlsxPath = GUILayout.TextField(sourceXlsxPath, GUILayout.Width(textLen));
 			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
-				sourceXlsxPath = EditorUtility.OpenFolderPanel("Select .xlsx path", String.Empty, "");
+				sourceXlsxPath = EditorUtility.OpenFolderPanel("Select .xls/xlsx path", String.Empty, "");
 			
 			GUILayout.EndHorizontal();
 			GUILayout.Space(spaceSize);
@@ -114,25 +114,29 @@ namespace EasyXlsx
 
 		void ClearAll()
 		{
-			string[] filePaths = Directory.GetFiles(outputCSPath);
-			for (int i = 0; i < filePaths.Length; ++i)
-			{
-				string filePath = filePaths[i];
-				if (!filePath.Contains(XlsxConverter.GetClassListName()))
-					File.Delete(filePath);
-			}
-
+			if (Directory.Exists(outputCSPath))
+				Directory.Delete(outputAssetPath, true);
 			if (Directory.Exists(outputAssetPath))
 				Directory.Delete(outputAssetPath, true);
 
 			AssetDatabase.Refresh();
-			Debug.Log("Clear done.");
+			EditorUtility.DisplayDialog("EasyExcel", "Clear done.", "OK");
 		}
 
 		void ToCSharps(string xlsxPath, string csPath)
 		{
 			try
 			{
+				if (!Directory.Exists(xlsxPath))
+				{
+					EditorUtility.DisplayDialog("EasyExcel", "Xls/xlsx path doesn't exist.", "OK");
+					return;
+				}
+				if (!Directory.Exists(csPath))
+				{
+					EditorUtility.DisplayDialog("EasyExcel", "CS path doesn't exist.", "OK");
+					return;
+				}
 				xlsxPath = xlsxPath.Replace("\\", "/");
 				csPath = csPath.Replace("\\", "/");
 				if (!csPath.EndsWith("/"))
@@ -149,7 +153,7 @@ namespace EasyXlsx
 					if (IsXlsxFile(filePath))
 					{
 						UpdateProgress(i, filePaths.Length, "");
-						XlsxConverter.ToCSharp(filePath, csPath);
+						ExcelConverter.ToCSharp(filePath, csPath);
 						int index = filePath.LastIndexOf("/") + 1;
 						string fileName = filePath.Substring(index, filePath.LastIndexOf(".") - index);
 						filenames.Add(fileName);
@@ -158,7 +162,7 @@ namespace EasyXlsx
 
 				EditorUtility.ClearProgressBar();
 				AssetDatabase.Refresh();
-				Debug.Log("Convert done.");
+				EditorUtility.DisplayDialog("EasyExcel", "Convert done.", "OK");
 			}
 			catch (Exception e)
 			{
@@ -172,6 +176,16 @@ namespace EasyXlsx
 		{
 			try
 			{
+				if (!Directory.Exists(xlsxPath))
+				{
+					EditorUtility.DisplayDialog("EasyExcel", "Xls/xlsx path doesn't exist.", "OK");
+					return;
+				}
+				if (!Directory.Exists(assetPath))
+				{
+					EditorUtility.DisplayDialog("EasyExcel", "Asset path doesn't exist.", "OK");
+					return;
+				}
 				xlsxPath = xlsxPath.Replace("\\", "/");
 				assetPath = assetPath.Replace("\\", "/");
 				if (!assetPath.EndsWith("/"))
@@ -187,13 +201,13 @@ namespace EasyXlsx
 					if (IsXlsxFile(filePath))
 					{
 						UpdateProgress(i, filePaths.Length, "");
-						XlsxConverter.ToAsset(filePath, assetPath);
+						ExcelConverter.ToAsset(filePath, assetPath);
 					}
 				}
 
 				EditorUtility.ClearProgressBar();
 				AssetDatabase.Refresh();
-				Debug.Log("Convert done.");
+				EditorUtility.DisplayDialog("EasyExcel", "Convert done.", "OK");
 			}
 			catch (Exception e)
 			{
@@ -208,7 +222,7 @@ namespace EasyXlsx
 		}
 		static void UpdateProgress(int progress, int progressMax, string desc)
 		{
-			string title = "Processing...[" + progress + " / " + progressMax + "]";
+			string title = "Converting...[" + progress + " / " + progressMax + "]";
 			float value = (float)progress / (float)progressMax;
 			EditorUtility.DisplayProgressBar(title, desc, value);
 		}

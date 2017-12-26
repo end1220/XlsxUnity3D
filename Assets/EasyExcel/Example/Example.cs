@@ -1,6 +1,6 @@
 ﻿
 using UnityEngine;
-using EasyXlsx;
+using EasyExcel;
 
 
 public class Example : MonoBehaviour
