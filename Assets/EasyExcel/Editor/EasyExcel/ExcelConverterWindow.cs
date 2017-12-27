@@ -28,11 +28,9 @@ namespace EasyExcel
 
 		void OnEnable()
 		{
-			sourceXlsxPath = Config.Instance.ExcelPath;// EditorPrefs.GetString("XlsxPath", null);
-			outputCSPath = Config.Instance.CSharpPath;// EditorPrefs.GetString("genCodePath", null);
-			outputAssetPath = Config.Instance.AssetPath;// EditorPrefs.GetString("assetPath", null);
-			//if (string.IsNullOrEmpty(outputAssetPath))
-			//	outputAssetPath = Application.dataPath + Config.AssetPath;
+			sourceXlsxPath = Config.Instance.ExcelPath;
+			outputCSPath = Config.Instance.CSharpPath;
+			outputAssetPath = Config.Instance.AssetPath;
 		}
 
 		private void SavePrefs()
@@ -40,9 +38,7 @@ namespace EasyExcel
 			Config.Instance.ExcelPath = sourceXlsxPath;
 			Config.Instance.CSharpPath = outputCSPath;
 			Config.Instance.AssetPath = outputAssetPath;
-			/*EditorPrefs.SetString("XlsxPath", sourceXlsxPath);
-			EditorPrefs.SetString("genCodePath", outputCSPath);
-			EditorPrefs.SetString("assetPath", outputAssetPath);*/
+			EditorUtility.SetDirty(Config.Instance);
 		}
 
 		private void OnDestroy()
@@ -68,8 +64,11 @@ namespace EasyExcel
 			GUILayout.Label("xls/xlsx path", EditorStyles.label, GUILayout.Width(titleLen));
 			sourceXlsxPath = GUILayout.TextField(sourceXlsxPath, GUILayout.Width(textLen));
 			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
+			{
 				sourceXlsxPath = EditorUtility.OpenFolderPanel("Select .xls/xlsx path", String.Empty, "");
-			
+				SavePrefs();
+			}
+
 			GUILayout.EndHorizontal();
 			GUILayout.Space(spaceSize);
 
@@ -78,7 +77,10 @@ namespace EasyExcel
 			GUILayout.Label("CS path", EditorStyles.label, GUILayout.Width(titleLen));
 			outputCSPath = GUILayout.TextField(outputCSPath, GUILayout.Width(textLen));
 			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
+			{
 				outputCSPath = EditorUtility.OpenFolderPanel("Select .cs path", String.Empty, "");
+				SavePrefs();
+			}
 
 			GUILayout.EndHorizontal();
 			GUILayout.Space(spaceSize);
@@ -88,7 +90,10 @@ namespace EasyExcel
 			GUILayout.Label("Asset path", EditorStyles.label, GUILayout.Width(titleLen));
 			outputAssetPath = GUILayout.TextField(outputAssetPath, GUILayout.Width(textLen));
 			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
+			{
 				outputAssetPath = EditorUtility.OpenFolderPanel("Select .asset path", String.Empty, "");
+				SavePrefs();
+			}
 
 			GUILayout.EndHorizontal();
 			GUILayout.Space(spaceSize);
@@ -164,6 +169,7 @@ namespace EasyExcel
 				}
 
 				EditorUtility.ClearProgressBar();
+				SavePrefs();
 				AssetDatabase.Refresh();
 				EditorUtility.DisplayDialog("EasyExcel", "Convert done.", "OK");
 			}
@@ -209,6 +215,7 @@ namespace EasyExcel
 				}
 
 				EditorUtility.ClearProgressBar();
+				SavePrefs();
 				AssetDatabase.Refresh();
 				EditorUtility.DisplayDialog("EasyExcel", "Convert done.", "OK");
 			}
