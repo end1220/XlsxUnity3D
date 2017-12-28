@@ -12,6 +12,7 @@ namespace EasyExcel
 	public class ExcelConverter
 	{
 		const int StartRow = 3;
+		const int TypeRowIndex = 1;
 
 		public static void ToAsset(string xlsxPath, string outputPath)
 		{
@@ -130,7 +131,7 @@ namespace EasyExcel
 					int cellColumnIndex = col;
 					if (cellColumnIndex >= 2)
 					{
-						string cellInfo = sheetData.At(3, col);
+						string cellInfo = sheetData.At(TypeRowIndex, col);
 						variableLength[cellColumnIndex] = "";
 						variableType[cellColumnIndex] = cellInfo;
 

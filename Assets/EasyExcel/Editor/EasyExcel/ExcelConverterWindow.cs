@@ -9,11 +9,10 @@ using UnityEditor;
 
 namespace EasyExcel
 {
-	/// <summary>
-	/// Xlsx converter window
-	/// </summary>
+
 	public class ExcelConverterWindow : EditorWindow
 	{
+		Texture imageTex;
 		string sourceXlsxPath;
 		string outputCSPath;
 		string outputAssetPath;
@@ -28,6 +27,7 @@ namespace EasyExcel
 
 		void OnEnable()
 		{
+			imageTex = Resources.Load("image") as Texture;
 			sourceXlsxPath = Config.Instance.ExcelPath;
 			outputCSPath = Config.Instance.CSharpPath;
 			outputAssetPath = Config.Instance.AssetPath;
@@ -35,10 +35,12 @@ namespace EasyExcel
 
 		private void SavePrefs()
 		{
-			Config.Instance.ExcelPath = sourceXlsxPath;
-			Config.Instance.CSharpPath = outputCSPath;
-			Config.Instance.AssetPath = outputAssetPath;
-			EditorUtility.SetDirty(Config.Instance);
+			if (Directory.Exists(sourceXlsxPath))
+				Config.Instance.ExcelPath = sourceXlsxPath;
+			if (Directory.Exists(outputCSPath))
+				Config.Instance.CSharpPath = outputCSPath;
+			if (Directory.Exists(outputAssetPath))
+				Config.Instance.AssetPath = outputAssetPath;
 		}
 
 		private void OnDestroy()
@@ -56,7 +58,10 @@ namespace EasyExcel
 			float buttonLen2 = 80;
 			float buttonHeight = 40;
 
+			GUILayout.BeginHorizontal();
+			GUILayout.Label(imageTex, GUILayout.Width(128), GUILayout.Height(50));
 			GUILayout.Label("  Import excel files as *.cs and *.asset.\n", EditorStyles.helpBox);
+			GUILayout.EndHorizontal();
 			GUILayout.Space(spaceSize);
 
 			GUILayout.BeginHorizontal();
