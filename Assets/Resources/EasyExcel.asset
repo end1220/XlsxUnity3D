@@ -11,6 +11,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d01e5ccd17e950542a3e4f2ebb490cd6, type: 3}
   m_Name: EasyExcel
   m_EditorClassIdentifier: 
-  ExcelPath: 
-  CSharpPath: 
-  AssetPath: 
+  ExcelPath: D:/Locke/git/XlsxUnity3D/Assets/EasyExcel/Example/ExcelFiles
+  CSharpPath: D:/Locke/git/XlsxUnity3D/Assets/EasyExcel/Example/AutoGenCode
+  AssetPath: D:/Locke/git/XlsxUnity3D/Assets/EasyExcel/Example/AutoGenAsset

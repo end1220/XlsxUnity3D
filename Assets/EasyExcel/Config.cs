@@ -11,7 +11,7 @@ namespace EasyExcel
 		public string CSharpPath = "";
 		public string AssetPath = "";
 
-		const string savePath = "Assets/rrrr/EasyExcel.asset";
+		const string savePath = "Assets/Resources/EasyExcel.asset";
 
 		private static Config inst;
 		public static Config Instance
@@ -21,8 +21,8 @@ namespace EasyExcel
 				if (inst == null)
 				{
 #if UNITY_EDITOR
-					if (!Directory.Exists("Assets/rrrr"))
-						Directory.CreateDirectory("Assets/rrrr");
+					if (!Directory.Exists("Assets/Resources"))
+						Directory.CreateDirectory("Assets/Resources");
 
 					inst = UnityEditor.AssetDatabase.LoadAssetAtPath(savePath, typeof(Config)) as Config;
 					if (inst == null)
@@ -31,7 +31,7 @@ namespace EasyExcel
 						UnityEditor.AssetDatabase.CreateAsset(inst, savePath);
 					}
 #else
-					inst = rrrr.Load("EasyExcel") as Config;
+					inst = Resources.Load("EasyExcel") as Config;
 #endif
 
 				}
