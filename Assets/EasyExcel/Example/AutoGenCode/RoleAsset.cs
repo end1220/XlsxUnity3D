@@ -28,32 +28,32 @@ public class RoleData : SingleData
 		column = base._init(sheet, row, column);
 
 		if(sheet[row][column] == null)
-			Name = "Orc";
+			Name = "";
 		else
 			Name = sheet[row][column];
 		column++;
 
 		if(sheet[row][column] == null)
-			Description = "Orc...";
+			Description = "";
 		else
 			Description = sheet[row][column];
 		column++;
 
 		if(sheet[row][column] == null)
-			Icon = "icon/icon.png";
+			Icon = "";
 		else
 			Icon = sheet[row][column];
 		column++;
 
-		HP = 80;
+		HP = 0;
 		int.TryParse(sheet[row][column], out HP);
 		column++;
 
-		Attack = 4;
+		Attack = 0;
 		int.TryParse(sheet[row][column], out Attack);
 		column++;
 
-		Speed = 2;
+		Speed = 0;
 		float.TryParse(sheet[row][column], out Speed);
 		column++;
 

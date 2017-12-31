@@ -1,7 +1,6 @@
 ﻿
 using System;
 using System.IO;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -10,173 +9,108 @@ using UnityEditor;
 namespace EasyExcel
 {
 
-	public class ExcelConverterWindow : EditorWindow
+	public class ExcelConverterWindow
 	{
-		Texture imageTex;
-		string sourceXlsxPath;
-		string outputCSPath;
-		string outputAssetPath;
+		static string excelPathKey = "EasyExcelExcelPath";
+		static string csChangedKey = "EasyExcelCSChanged";
 
-		[MenuItem(@"Tools/EasyExcel")]
-		public static void ShowExcelWindow()
+		[MenuItem(@"Tools/EasyExcel/ImportFolder")]
+		public static void ImportFolder()
 		{
-			Rect wr = new Rect(100, 100, 640, 480);
-			var window = (ExcelConverterWindow)EditorWindow.GetWindowWithRect(typeof(ExcelConverterWindow), wr, true, "EasyExcel");
-			window.Show();
+			string historyExcelPath = EditorPrefs.GetString(excelPathKey);
+			if (string.IsNullOrEmpty(historyExcelPath) || !Directory.Exists(historyExcelPath))
+				historyExcelPath = Environment.CurrentDirectory;
+			string excelPath = EditorUtility.OpenFolderPanel("Select folder of .xls/xlsx", historyExcelPath, "");
+			if (string.IsNullOrEmpty(excelPath))
+				return;
+			EditorPrefs.SetString(excelPathKey, excelPath);
+			ToCSharps(excelPath, Environment.CurrentDirectory + "/" + Config.Instance.CSharpPath);
 		}
 
-		void OnEnable()
+		[MenuItem(@"Tools/EasyExcel/ImportFile")]
+		public static void ImportFile()
 		{
-			imageTex = Resources.Load("image") as Texture;
-			sourceXlsxPath = Config.Instance.ExcelPath;
-			outputCSPath = Config.Instance.CSharpPath;
-			outputAssetPath = Config.Instance.AssetPath;
-		}
-
-		private void SavePrefs()
-		{
-			if (Directory.Exists(sourceXlsxPath))
-				Config.Instance.ExcelPath = sourceXlsxPath;
-			if (Directory.Exists(outputCSPath))
-				Config.Instance.CSharpPath = outputCSPath;
-			if (Directory.Exists(outputAssetPath))
-				Config.Instance.AssetPath = outputAssetPath;
-		}
-
-		private void OnDestroy()
-		{
-			SavePrefs();
-		}
-
-		void OnGUI()
-		{
-			float spaceSize = 10f;
-			float leftSpace = 10;
-			float titleLen = 80;
-			float textLen = 450;
-			float buttonLen1 = 120;
-			float buttonLen2 = 80;
-			float buttonHeight = 40;
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label(imageTex, GUILayout.Width(128), GUILayout.Height(50));
-			GUILayout.Label("  Import excel files as *.cs and *.asset.\n", EditorStyles.helpBox);
-			GUILayout.EndHorizontal();
-			GUILayout.Space(spaceSize);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(leftSpace);
-			GUILayout.Label("xls/xlsx path", EditorStyles.label, GUILayout.Width(titleLen));
-			sourceXlsxPath = GUILayout.TextField(sourceXlsxPath, GUILayout.Width(textLen));
-			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
-			{
-				sourceXlsxPath = EditorUtility.OpenFolderPanel("Select .xls/xlsx path", String.Empty, "");
-				SavePrefs();
-			}
-
-			GUILayout.EndHorizontal();
-			GUILayout.Space(spaceSize);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(leftSpace);
-			GUILayout.Label("CS path", EditorStyles.label, GUILayout.Width(titleLen));
-			outputCSPath = GUILayout.TextField(outputCSPath, GUILayout.Width(textLen));
-			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
-			{
-				outputCSPath = EditorUtility.OpenFolderPanel("Select .cs path", String.Empty, "");
-				SavePrefs();
-			}
-
-			GUILayout.EndHorizontal();
-			GUILayout.Space(spaceSize);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(leftSpace);
-			GUILayout.Label("Asset path", EditorStyles.label, GUILayout.Width(titleLen));
-			outputAssetPath = GUILayout.TextField(outputAssetPath, GUILayout.Width(textLen));
-			if (GUILayout.Button("Change", GUILayout.Width(buttonLen2)))
-			{
-				outputAssetPath = EditorUtility.OpenFolderPanel("Select .asset path", String.Empty, "");
-				SavePrefs();
-			}
-
-			GUILayout.EndHorizontal();
-			GUILayout.Space(spaceSize);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(leftSpace);
-			if (GUILayout.Button("Clear All", GUILayout.Width(buttonLen1), GUILayout.Height(buttonHeight)))
-			{
-				ClearAll();
-			}
-			if (GUILayout.Button("Generate *.cs", GUILayout.Width(buttonLen1), GUILayout.Height(buttonHeight)))
-			{
-				ToCSharps(sourceXlsxPath, outputCSPath);
-				SavePrefs();
-			}
-
-			if (GUILayout.Button("Generate *.asset", GUILayout.Width(buttonLen1), GUILayout.Height(buttonHeight)))
-			{
-				ToAssets(sourceXlsxPath, outputAssetPath);
-				SavePrefs();
-			}
 			
-			GUILayout.EndHorizontal();
-			GUILayout.Space(spaceSize);
 		}
 
-		void ClearAll()
+		[MenuItem(@"Tools/EasyExcel/Clean")]
+		public static void Clean()
 		{
-			if (Directory.Exists(outputCSPath))
-				Directory.Delete(outputAssetPath, true);
-			if (Directory.Exists(outputAssetPath))
-				Directory.Delete(outputAssetPath, true);
+			EditorPrefs.SetBool(csChangedKey, false);
+
+			if (Directory.Exists(Config.Instance.CSharpPath))
+				Directory.Delete(Config.Instance.CSharpPath, true);
+			Directory.CreateDirectory(Config.Instance.CSharpPath);
+
+			if (Directory.Exists(Config.Instance.AssetPath))
+				Directory.Delete(Config.Instance.AssetPath, true);
+			Directory.CreateDirectory(Config.Instance.AssetPath);
 
 			AssetDatabase.Refresh();
-			EditorUtility.DisplayDialog("EasyExcel", "Clear done.", "OK");
 		}
 
-		void ToCSharps(string xlsxPath, string csPath)
+		static void ToCSharps(string xlsxPath, string csPath)
 		{
 			try
 			{
 				if (!Directory.Exists(xlsxPath))
 				{
-					EditorUtility.DisplayDialog("EasyExcel", "Xls/xlsx path doesn't exist.", "OK");
+					EditorUtility.DisplayDialog("EasyExcel", "Excel files path doesn't exist.", "OK");
 					return;
 				}
 				if (!Directory.Exists(csPath))
 				{
-					EditorUtility.DisplayDialog("EasyExcel", "CS path doesn't exist.", "OK");
+					EditorUtility.DisplayDialog("EasyExcel", string.Format("Folder {0} doesn't exist.", csPath), "OK");
 					return;
 				}
 				xlsxPath = xlsxPath.Replace("\\", "/");
 				csPath = csPath.Replace("\\", "/");
 				if (!csPath.EndsWith("/"))
 					csPath += "/";
-				if (Directory.Exists(csPath))
-					Directory.Delete(csPath, true);
-				Directory.CreateDirectory(csPath);
-
+				
+				bool csChanged = false;
 				string[] filePaths = Directory.GetFiles(xlsxPath);
-				List<string> filenames = new List<string>();
 				for (int i = 0; i < filePaths.Length; ++i)
 				{
-					string filePath = filePaths[i].Replace("\\", "/"); ;
-					if (IsXlsxFile(filePath))
+					string xlsxFilePath = filePaths[i].Replace("\\", "/"); ;
+					if (IsXlsxFile(xlsxFilePath))
 					{
 						UpdateProgress(i, filePaths.Length, "");
-						ExcelConverter.ToCSharp(filePath, csPath);
-						int index = filePath.LastIndexOf("/") + 1;
-						string fileName = filePath.Substring(index, filePath.LastIndexOf(".") - index);
-						filenames.Add(fileName);
+						string newCs = ExcelConverter.ToCSharp(xlsxFilePath);
+						int index = xlsxFilePath.LastIndexOf("/") + 1;
+						string fileName = xlsxFilePath.Substring(index, xlsxFilePath.LastIndexOf(".") - index);
+						string csFilePath = csPath + ExcelConverter.GetAssetClassName(fileName) + ".cs";
+						bool shouldWrite = true;
+						if (File.Exists(csFilePath))
+						{
+							string oldCs = File.ReadAllText(csFilePath);
+							shouldWrite = oldCs != newCs;
+						}
+						if (shouldWrite)
+						{
+							csChanged = true;
+							StreamWriter streamwriter = new StreamWriter(csFilePath, false);
+							streamwriter.Write(newCs);
+							streamwriter.Flush();
+							streamwriter.Close();
+						}
 					}
 				}
 
-				EditorUtility.ClearProgressBar();
-				SavePrefs();
-				AssetDatabase.Refresh();
-				EditorUtility.DisplayDialog("EasyExcel", "Convert done.", "OK");
+				if (csChanged)
+				{
+					EditorPrefs.SetBool(csChangedKey, true);
+					EditorUtility.ClearProgressBar();
+					AssetDatabase.Refresh();
+				}
+				else
+				{
+					EditorUtility.ClearProgressBar();
+					string historyExcelPath = EditorPrefs.GetString(excelPathKey);
+					if (!string.IsNullOrEmpty(historyExcelPath))
+						ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.Instance.AssetPath);
+				}
+
 			}
 			catch (Exception e)
 			{
@@ -186,7 +120,19 @@ namespace EasyExcel
 			}
 		}
 
-		void ToAssets(string xlsxPath, string assetPath)
+		[UnityEditor.Callbacks.DidReloadScripts]
+		private static void OnScriptsReloaded()
+		{
+			if (EditorPrefs.GetBool(csChangedKey, false))
+			{
+				EditorPrefs.SetBool(csChangedKey, false);
+				string historyExcelPath = EditorPrefs.GetString(excelPathKey);
+				if (!string.IsNullOrEmpty(historyExcelPath))
+					ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.Instance.AssetPath);
+			}
+		}
+
+		static void ToAssets(string xlsxPath, string assetPath)
 		{
 			try
 			{
@@ -220,9 +166,8 @@ namespace EasyExcel
 				}
 
 				EditorUtility.ClearProgressBar();
-				SavePrefs();
 				AssetDatabase.Refresh();
-				EditorUtility.DisplayDialog("EasyExcel", "Convert done.", "OK");
+				EditorUtility.DisplayDialog("EasyExcel", "Import done.", "OK");
 			}
 			catch (Exception e)
 			{
@@ -237,7 +182,7 @@ namespace EasyExcel
 		}
 		static void UpdateProgress(int progress, int progressMax, string desc)
 		{
-			string title = "Converting...[" + progress + " / " + progressMax + "]";
+			string title = "Importing...[" + progress + " / " + progressMax + "]";
 			float value = (float)progress / (float)progressMax;
 			EditorUtility.DisplayProgressBar(title, desc, value);
 		}

@@ -7,9 +7,9 @@ namespace EasyExcel
 
 	public class Config : ScriptableObject
 	{
-		public string ExcelPath = "";
-		public string CSharpPath = "";
-		public string AssetPath = "";
+		public string ExcelPath = "Assets/EasyExcel/Example/ExcelFiles/";
+		public string CSharpPath = "Assets/EasyExcel/Example/AutoGenCode/";
+		public string AssetPath = "Assets/EasyExcel/Example/AutoGenAsset/";
 
 		const string savePath = "Assets/Resources/EasyExcel.asset";
 

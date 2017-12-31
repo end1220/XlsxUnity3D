@@ -11,6 +11,7 @@ namespace EasyExcel
 	/// </summary>
 	public class ExcelConverter
 	{
+		const int DefaultValueRow = 2;
 		const int StartRow = 3;
 		const int TypeRowIndex = 1;
 
@@ -49,6 +50,15 @@ namespace EasyExcel
 				Debug.LogError(e.ToString());
 				AssetDatabase.Refresh();
 			}
+		}
+
+		public static string ToCSharp(string xlsxPath)
+		{
+			int index = xlsxPath.LastIndexOf("/") + 1;
+			string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
+			var sheetData = ExcelReader.AsStringArray(xlsxPath);
+			string txt = ToCSharp(sheetData, fileName);
+			return txt;
 		}
 
 		public static void ToAsset(string fileName, string outputPath, ExcelReader.SheetData sheetData)
@@ -102,7 +112,7 @@ namespace EasyExcel
 			{
 				string csFile = "\n// Auto generated file. DO NOT MODIFY.\n\n";
 
-				csFile += "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\nusing EasyExcel;\n\n\n";
+				csFile += "using System;\nusing System.Collections.Generic;\nusing EasyExcel;\n\n\n";
 				csFile += "[Serializable]\n";
 				csFile += "public class " + GetDataClassName(fileName) + " : SingleData" + "\n";
 				csFile += "" + "{" + "\n";
@@ -171,7 +181,7 @@ namespace EasyExcel
 					int cellColumnIndex = col;
 					if (cellColumnIndex >= 2)
 					{
-						variableDefaultValue[cellColumnIndex] = sheetData.At(4, col);
+						variableDefaultValue[cellColumnIndex] = sheetData.At(DefaultValueRow, col);
 
 						//special deal with bool
 						if (variableType[cellColumnIndex].Equals("bool"))
@@ -213,7 +223,7 @@ namespace EasyExcel
 							if (variableLength[cellColumnIndex].Equals(""))
 							{
 								csFile += "\t\tif(sheet[row][column] == null)" + "\n";
-								csFile += "\t\t\t" + variableName[cellColumnIndex] + " = " + variableDefaultValue[cellColumnIndex] + ";\n";
+								csFile += "\t\t\t" + variableName[cellColumnIndex] + " = \"" + variableDefaultValue[cellColumnIndex] + "\";\n";
 								csFile += "\t\telse" + "\n";
 								csFile += "\t\t\t" + variableName[cellColumnIndex] + " = sheet[row][column];\n";
 							}
@@ -277,12 +287,12 @@ namespace EasyExcel
 			return fileName + "Data";
 		}
 
-		static string GetAssetClassName(string fileName)
+		public static string GetAssetClassName(string fileName)
 		{
 			return fileName + "Asset";
 		}
 
-		static string GetAssetName(string fileName)
+		public static string GetAssetName(string fileName)
 		{
 			return fileName + ".asset";
 		}
