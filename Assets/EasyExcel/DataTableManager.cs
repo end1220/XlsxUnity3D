@@ -46,10 +46,37 @@ namespace EasyExcel
 	{
 		private Dictionary<Type, DataDic> dataPool = new Dictionary<Type, DataDic>();
 
-		
-		public void Load()
+
+		/// <summary>
+		/// Load all the imported tables.
+		/// </summary>
+		/// <param name="fromAssetbundle">Set true if load from assetbundle file; Set false if load from Resources folder.</param>
+		public void Load(bool fromAssetbundle)
 		{
-			AssetBundle bundle = AssetBundle.LoadFromFile(Config.AssetbundlePath + Config.AssetbudleName);
+			AssetBundle bundle = null;
+
+			if (fromAssetbundle)
+			{
+				string assetbundlePath = Config.AssetbundlePath + Config.AssetbudleName;
+#if UNITY_EDITOR
+				if (!System.IO.File.Exists(assetbundlePath))
+				{
+					UnityEditor.EditorUtility.DisplayDialog("EasyExcel", string.Format("When loading from assetbundle, assetbundle {0} MUST be built first. Make sure to build it before running by menu Tools->EasyExcel->Build Assetbundle.", assetbundlePath), "OK");
+					return;
+				}
+#endif
+				bundle = AssetBundle.LoadFromFile(assetbundlePath);
+			}
+			else
+			{
+#if UNITY_EDITOR
+				if (!Config.AssetPath.Contains("/Resources/"))
+				{
+					UnityEditor.EditorUtility.DisplayDialog("EasyExcel", string.Format("When not loading from assetbundle, Config.AssetPath {0} MUST be in Resources folder.", Config.AssetPath), "OK");
+					return;
+				}
+#endif
+			}
 
 			Type baseType = typeof(DataTable);
 			Assembly assembly = baseType.Assembly;
@@ -58,23 +85,35 @@ namespace EasyExcel
 				string collectionClassName = type.Name;
 				string headName = collectionClassName.Substring(0, collectionClassName.IndexOf("Asset"));
 
-				string filePath = Config.AssetPath + headName + ".asset";
-				DataTable collection = bundle.LoadAsset(filePath, typeof(DataTable)) as DataTable;
-				if (collection == null)
+				string filePath = null;
+				DataTable table = null;
+				if (fromAssetbundle)
+				{
+					filePath = Config.AssetPath + headName + ".asset";
+					table = bundle.LoadAsset(filePath, typeof(DataTable)) as DataTable;
+				}
+				else
+				{
+					filePath = Config.AssetPath.Substring(Config.AssetPath.IndexOf("Resources/") + ("Resources/").Length) + headName;
+					table = Resources.Load(filePath) as DataTable;
+				}
+				if (table == null)
 				{
 					Debug.LogError("DataManager: Load asset error with " + filePath);
 					continue;
 				}
 				DataDic dataDic = new DataDic();
-				for (int i = 0; i < collection.GetDataCount(); ++i)
+				for (int i = 0; i < table.GetDataCount(); ++i)
 				{
-					SingleData data = collection.GetData(i);
+					SingleData data = table.GetData(i);
 					dataDic.Add(data.id, data);
 				}
 
 				Type dataClassType = Type.GetType(headName + "Data");
 				dataPool.Add(dataClassType, dataDic);
 			}
+
+			Debug.Log(string.Format("EasyExcel: {0} tables loaded.", dataPool.Count));
 		}
 
 		public T Get<T>(int id) where T : SingleData

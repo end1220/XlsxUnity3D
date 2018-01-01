@@ -5,13 +5,13 @@ using EasyExcel;
 
 public class Example : MonoBehaviour
 {
+	DataTableManager mgr = new DataTableManager();
 
 	void Start()
 	{
-		DataTableManager mgr = new DataTableManager();
-		mgr.Load();
+		mgr.Load(false);
 
-		var npc = mgr.Get<ItemData>(2008);
+		/*var npc = mgr.Get<ItemData>(2008);
 		Debug.Log(npc.Description);
 
 		var dic = mgr.GetList<RoleData>();
@@ -19,7 +19,7 @@ public class Example : MonoBehaviour
 		{
 			RoleData np = item as RoleData;
 			Debug.Log(np.Icon);
-		}
+		}*/
 	}
 
 
