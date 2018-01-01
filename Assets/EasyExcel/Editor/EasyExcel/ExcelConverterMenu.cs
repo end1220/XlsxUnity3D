@@ -199,6 +199,7 @@ namespace EasyExcel
 				Directory.CreateDirectory(assetPath);
 
 				string[] filePaths = Directory.GetFiles(xlsxPath);
+				int count = 0;
 				for (int i = 0; i < filePaths.Length; ++i)
 				{
 					string filePath = filePaths[i].Replace("\\", "/"); ;
@@ -206,7 +207,7 @@ namespace EasyExcel
 					{
 						UpdateProgress(i, filePaths.Length, "");
 						ExcelConverter.ToAsset(filePath, assetPath);
-
+						count++;
 						// assign asset bundle name.
 						int index = filePath.LastIndexOf("/") + 1;
 						string fileName = filePath.Substring(index, filePath.LastIndexOf(".") - index);
@@ -219,7 +220,7 @@ namespace EasyExcel
 
 				EditorUtility.ClearProgressBar();
 				AssetDatabase.Refresh();
-				EditorUtility.DisplayDialog("EasyExcel", "Import done.", "OK");
+				EditorUtility.DisplayDialog("EasyExcel", string.Format("Import done. {0} tables are imported.", count), "OK");
 			}
 			catch (Exception e)
 			{

@@ -11,9 +11,18 @@ namespace EasyExcel
 	/// </summary>
 	public class ExcelConverter
 	{
-		const int DefaultValueRow = 2;
-		const int StartRow = 3;
-		const int TypeRowIndex = 1;
+		// Row 0 is Name
+		const int NAME_ROW_INDEX = 0;
+
+		// Row 1 is Type
+		const int TYPE_ROW_INDEX = 1;
+
+		// Row 2 is default value
+		const int DEFAULT_VALUE_ROW_INDEX = 2;
+
+		// Row 3 is where real data starts
+		const int DATA_START_INDEX = 3;
+
 
 		public static void ToAsset(string xlsxPath, string outputPath)
 		{
@@ -83,12 +92,12 @@ namespace EasyExcel
 
 				System.Reflection.ConstructorInfo dataCtor = dataType.GetConstructor(Type.EmptyTypes);
 
-				for (int row = StartRow; row < sheetData.rowCount; ++row)
+				for (int row = DATA_START_INDEX; row < sheetData.rowCount; ++row)
 				{
 					for (int col = 0; col < sheetData.columnCount; ++col)
 						sheetData.At(row, col).Replace("\n", "\\n");
 
-					SingleData inst = dataCtor.Invoke(null) as SingleData;
+					RowData inst = dataCtor.Invoke(null) as RowData;
 					inst._init(sheetData.Table, row, 0);
 					dataCollect.AddData(inst);
 				}
@@ -114,162 +123,147 @@ namespace EasyExcel
 
 				csFile += "using System;\nusing System.Collections.Generic;\nusing EasyExcel;\n\n\n";
 				csFile += "[Serializable]\n";
-				csFile += "public class " + GetDataClassName(fileName) + " : SingleData" + "\n";
+				csFile += "public class " + GetDataClassName(fileName) + " : RowData" + "\n";
 				csFile += "" + "{" + "\n";
 
 				int columnCount = sheetData.columnCount;
 
-				// get variable names from 1st row.
+				// Get variable names
 				string[] variableName = new string[columnCount];
 				for (int col = 0; col < columnCount; col++)
 				{
-					variableName[col] = sheetData.At(0, col);
+					variableName[col] = sheetData.At(NAME_ROW_INDEX, col);
 				}
 
-				// Get variableDescribe array from 2nd row
-				string[] variableDescribe = new string[columnCount];
-				for (int col = 0; col < columnCount; col++)
-				{
-					variableDescribe[col] = sheetData.At(1, col);
-				}
-
-				// Add variableType Info To CS from 3rd row
+				// Get variable types
 				string[] variableLength = new string[columnCount];
 				string[] variableType = new string[columnCount];
-				for (int col = 0; col < columnCount; col++)
+				// skip column 0 for ID
+				for (int col = 1; col < columnCount; col++)
 				{
-					int cellColumnIndex = col;
-					if (cellColumnIndex >= 2)
+					string cellInfo = sheetData.At(TYPE_ROW_INDEX, col);
+					variableLength[col] = null;
+					variableType[col] = cellInfo;
+
+					if (cellInfo.EndsWith("]"))
 					{
-						string cellInfo = sheetData.At(TypeRowIndex, col);
-						variableLength[cellColumnIndex] = "";
-						variableType[cellColumnIndex] = cellInfo;
+						int startIndex = cellInfo.IndexOf('[');
+						variableLength[col] = cellInfo.Substring(startIndex + 1, cellInfo.Length - startIndex - 2);
+						variableType[col] = cellInfo.Substring(0, startIndex);
+					}
 
-						if (cellInfo.EndsWith("]"))
+					string varName = variableName[col];
+					string varLen = variableLength[col];
+					string varType = variableType[col];
+
+					if (varType.Equals("int") || varType.Equals("float") ||
+						varType.Equals("double") || varType.Equals("long") ||
+						varType.Equals("string") || varType.Equals("bool") ||
+						varType.Equals("JObject"))
+					{
+						if (varLen == null)
 						{
-							int startIndex = cellInfo.IndexOf('[');
-							variableLength[cellColumnIndex] = cellInfo.Substring(startIndex + 1, cellInfo.Length - startIndex - 2);
-							variableType[cellColumnIndex] = cellInfo.Substring(0, startIndex);
+							csFile += "\tpublic " + varType + " " + varName + ";\n\n";
 						}
-
-						if (variableType[cellColumnIndex].Equals("int") || variableType[cellColumnIndex].Equals("float") ||
-							variableType[cellColumnIndex].Equals("double") || variableType[cellColumnIndex].Equals("long") ||
-							variableType[cellColumnIndex].Equals("string") || variableType[cellColumnIndex].Equals("bool") ||
-							variableType[cellColumnIndex].Equals("JObject"))
+						else
 						{
-							if (variableLength[cellColumnIndex].Equals(""))
-							{
-								csFile += "\tpublic " + variableType[cellColumnIndex] + " " + variableName[cellColumnIndex] + ";\n";
-								csFile += "\n";
-							}
-							else
-							{
-								csFile += "\tpublic " + variableType[cellColumnIndex] + "[] " + variableName[cellColumnIndex] + " = new " + variableType[cellColumnIndex] + "[" + variableLength[cellColumnIndex] + "];\t\n";
-								csFile += "\n";
-							}
+							csFile += "\tpublic " + varType + "[] " + varName + ";\n\n"; //" = new " + varType + "[" + varLen + "];\n\n";
 						}
 					}
+
 				}
 
-				string[] variableDefaultValue = new string[columnCount];
+				string[] variableDefaults = new string[columnCount];
 				csFile += "#if UNITY_EDITOR\n";
 				csFile += "\tpublic override int _init(List<List<string>> sheet, int row, int column)" + "\n";
 				csFile += "\t{" + "\n";
 				csFile += "\t\tcolumn = base._init(sheet, row, column);\n\n";
-				for (int col = 0; col < columnCount; col++)
+				// skip column 0 for ID
+				for (int col = 1; col < columnCount; col++)
 				{
-					int cellColumnIndex = col;
-					if (cellColumnIndex >= 2)
+					variableDefaults[col] = sheetData.At(DEFAULT_VALUE_ROW_INDEX, col);
+
+					string varType = variableType[col];
+					if (varType.Equals("bool"))
 					{
-						variableDefaultValue[cellColumnIndex] = sheetData.At(DefaultValueRow, col);
+						if (variableDefaults[col].Equals("0"))
+							variableDefaults[col] = "false";
+						else
+							variableDefaults[col] = "true";
+					}
 
-						//special deal with bool
-						if (variableType[cellColumnIndex].Equals("bool"))
+					string varDefault = variableDefaults[col];
+					string varLen = variableLength[col];
+					string varName = variableName[col];
+
+					if (varType.Equals("int") || varType.Equals("float") || varType.Equals("double") || varType.Equals("long") || varType.Equals("bool"))
+					{
+						if (varLen == null)
 						{
-							if (variableDefaultValue[cellColumnIndex].Equals("0"))
-								variableDefaultValue[cellColumnIndex] = "false";
-							else
-								variableDefaultValue[cellColumnIndex] = "true";
+							csFile += "\t\t" + varName + " = " + varDefault + ";\n";
+							csFile += "\t\t" + varType + ".TryParse(sheet[row][column], out " + varName + ");\n";
 						}
-
-						if (variableType[cellColumnIndex].Equals("int") || variableType[cellColumnIndex].Equals("float") ||
-							variableType[cellColumnIndex].Equals("double") || variableType[cellColumnIndex].Equals("long") ||
-							variableType[cellColumnIndex].Equals("bool"))
+						else
 						{
-							if (variableLength[cellColumnIndex].Equals(""))
-							{
-								csFile += "\t\t" + variableName[cellColumnIndex] + " = " + variableDefaultValue[cellColumnIndex] + ";\n";
-								csFile += "\t\t" + variableType[cellColumnIndex] + ".TryParse(sheet[row][column], out " + variableName[cellColumnIndex] + ");\n";
-							}
-							else
-							{
-								// default value
-								csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)" + "\n";
-								csFile += "\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
-
-								csFile += "\t\tstring[] " + variableName[cellColumnIndex] + "Array = sheet[row][column].Split(\',\');" + "\n";
-								csFile += "\t\tint " + variableName[cellColumnIndex] + "Count = " + variableName[cellColumnIndex] + "Array.Length;" + "\n";
-								csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)\n";
-								csFile += "\t\t{\n";
-								csFile += "\t\t\tif(i < " + variableName[cellColumnIndex] + "Count)" + "\n";
-								csFile += "\t\t\t\t" + variableType[cellColumnIndex] + ".TryParse(" + variableName[cellColumnIndex] + "Array[i], out " + variableName[cellColumnIndex] + "[i]);" + "\n";
-								csFile += "\t\t\telse" + "\n";
-								csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
-								csFile += "\t\t}\n";
-							}
-						}
-						if (variableType[cellColumnIndex].Equals("string"))
-						{
-							if (variableLength[cellColumnIndex].Equals(""))
-							{
-								csFile += "\t\tif(sheet[row][column] == null)" + "\n";
-								csFile += "\t\t\t" + variableName[cellColumnIndex] + " = \"" + variableDefaultValue[cellColumnIndex] + "\";\n";
-								csFile += "\t\telse" + "\n";
-								csFile += "\t\t\t" + variableName[cellColumnIndex] + " = sheet[row][column];\n";
-							}
-							else
-							{
-								csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++)" + "\n";
-								csFile += "\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
-
-								csFile += "\t\tstring[] " + variableName[cellColumnIndex] + "Array = sheet[row][column].Split(\',\');" + "\n";
-								csFile += "\t\tint " + variableName[cellColumnIndex] + "Count = " + variableName[cellColumnIndex] + "Array.Length;" + "\n";
-								csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++){" + "\n";
-								csFile += "\t\t\tif(i < " + variableName[cellColumnIndex] + "Count)" + "\n";
-								csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableName[cellColumnIndex] + "Array[i];\n";
-								csFile += "\t\t\telse" + "\n";
-								csFile += "\t\t\t\t" + variableName[cellColumnIndex] + "[i] = " + variableDefaultValue[cellColumnIndex] + ";\n";
-								csFile += "\t\t}\n";
-							}
-						}
-						// JObject
-						if (variableType[cellColumnIndex].Equals("JObject"))
-						{
-							csFile += "\t\tfor(int i=0; i<" + variableLength[cellColumnIndex] + "; i++){" + "\n";
-							csFile += "\t\t\tJArray ja = (JArray)JsonConvert.DeserializeObject(sheet[row][column]);\n";
-							csFile += "\t\t\t" + variableName[cellColumnIndex] + "[i] = (JObject)ja[i];\n";
+							csFile += "\t\tstring[] " + varName + "Array = sheet[row][column].Split(\',\');" + "\n";
+							csFile += "\t\tint " + varName + "Count = " + varName + "Array.Length;" + "\n";
+							csFile += "\t\t" + varName + " = new " + varType + "[" + varName + "Count];\n";
+							csFile += "\t\tfor(int i = 0; i < " + varName + "Count; i++)\n";
+							csFile += "\t\t{\n";
+							csFile += "\t\t\t" + varType + ".TryParse(" + varName + "Array[i], out " + varName + "[i]);" + "\n";
 							csFile += "\t\t}\n";
 						}
-
-						csFile += "\t\tcolumn++;\n";
-						csFile += "\n";
-
 					}
+					else if (varType.Equals("string"))
+					{
+						if (varLen == null)
+						{
+							csFile += "\t\tif(sheet[row][column] == null)" + "\n";
+							csFile += "\t\t\t" + varName + " = \"" + varDefault + "\";\n";
+							csFile += "\t\telse" + "\n";
+							csFile += "\t\t\t" + varName + " = sheet[row][column];\n";
+						}
+						else
+						{
+							csFile += "\t\tstring[] " + varName + "Array = sheet[row][column].Split(\',\');" + "\n";
+							csFile += "\t\tint " + varName + "Count = " + varName + "Array.Length;" + "\n";
+							csFile += "\t\t" + varName + " = new " + varType + "[" + varName + "Count];\n";
+							csFile += "\t\tfor(int i = 0; i < " + varName + "Count; i++)\n";
+							csFile += "\t\t{\n";
+							csFile += "\t\t\t" + varName + "[i] = " + varName + "Array[i];\n";
+							csFile += "\t\t}\n";
+
+							//csFile += "\t\tfor(int i=0; i<" + varLen + "; i++)" + "\n";
+							//csFile += "\t\t\t" + varName + "[i] = \"" + varDefault + "\";\n";
+
+							//csFile += "\t\tstring[] " + varName + "Array = sheet[row][column].Split(\',\');" + "\n";
+							//csFile += "\t\tint " + varName + "Count = " + varName + "Array.Length;" + "\n";
+							/*csFile += "\t\tfor(int i=0; i<" + varLen + "; i++){" + "\n";
+							csFile += "\t\t\tif(i < " + varName + "Count)" + "\n";
+							csFile += "\t\t\t\t" + varName + "[i] = " + varName + "Array[i];\n";
+							csFile += "\t\t\telse" + "\n";
+							csFile += "\t\t\t\t" + varName + "[i] = \"" + varDefault + "\";\n";
+							csFile += "\t\t}\n";*/
+						}
+					}
+
+					csFile += "\t\tcolumn++;\n";
+					csFile += "\n";
 				}
 				csFile += "\t\treturn column;\n";
 				csFile += "\n\t}\n#endif\n";
 
 				csFile += "}\n\n";
 
-				// collection class
+				// DataTable class
 				//csFile += "\n\n[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
 				csFile += "public class " + GetAssetClassName(fileName) + " : DataTable\n";
 				csFile += "{\n";
 				csFile += "\tpublic List<" + GetDataClassName(fileName) + "> elements = new List<" + GetDataClassName(fileName) + ">();\n\n";
 
-				csFile += "\tpublic override void AddData(SingleData data)\n\t{\n\t\telements.Add(data as " + GetDataClassName(fileName) + ");\n\t}\n\n";
+				csFile += "\tpublic override void AddData(RowData data)\n\t{\n\t\telements.Add(data as " + GetDataClassName(fileName) + ");\n\t}\n\n";
 				csFile += "\tpublic override int GetDataCount()\n\t{\n\t\treturn elements.Count;\n\t}\n\n";
-				csFile += "\tpublic override SingleData GetData(int index)\n\t{\n\t\treturn elements[index];\n\t}\n";
+				csFile += "\tpublic override RowData GetData(int index)\n\t{\n\t\treturn elements[index];\n\t}\n";
 
 				csFile += "}\n";
 

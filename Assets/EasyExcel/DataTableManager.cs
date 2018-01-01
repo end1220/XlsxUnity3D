@@ -9,35 +9,34 @@ using System;
 namespace EasyExcel
 {
 
-	using DataDic = Dictionary<int, SingleData>;
+	using DataDic = Dictionary<int, RowData>;
 
 	/// <summary>
 	/// A piece of data(one row in excel)
 	/// </summary>
 	[Serializable]
-	public abstract class SingleData
+	public abstract class RowData
 	{
-		public int id;
+		public int ID;
 
 		public virtual int _init(List<List<string>> sheet, int row, int column)
 		{
-			column++;
-			id = 0;
-			int.TryParse(sheet[row][column++], out id);
+			ID = 0;
+			int.TryParse(sheet[row][column++], out ID);
 			return column;
 		}
 	}
 
 	/// <summary>
-	/// Table of SingleData
+	/// Table of RowData
 	/// </summary>
 	public abstract class DataTable : ScriptableObject
 	{
-		public abstract void AddData(SingleData data);
+		public abstract void AddData(RowData data);
 
 		public abstract int GetDataCount();
 
-		public abstract SingleData GetData(int index);
+		public abstract RowData GetData(int index);
 
 	}
 
@@ -105,8 +104,8 @@ namespace EasyExcel
 				DataDic dataDic = new DataDic();
 				for (int i = 0; i < table.GetDataCount(); ++i)
 				{
-					SingleData data = table.GetData(i);
-					dataDic.Add(data.id, data);
+					RowData data = table.GetData(i);
+					dataDic.Add(data.ID, data);
 				}
 
 				Type dataClassType = Type.GetType(headName + "Data");
@@ -116,20 +115,20 @@ namespace EasyExcel
 			Debug.Log(string.Format("EasyExcel: {0} tables loaded.", dataPool.Count));
 		}
 
-		public T Get<T>(int id) where T : SingleData
+		public T Get<T>(int id) where T : RowData
 		{
 			DataDic soDic = null;
 			dataPool.TryGetValue(typeof(T), out soDic);
 			if (soDic != null)
 			{
-				SingleData data = null;
+				RowData data = null;
 				soDic.TryGetValue(id, out data);
 				return data as T;
 			}
 			return null;
 		}
 
-		public DataDic GetList<T>() where T : SingleData
+		public DataDic GetList<T>() where T : RowData
 		{
 			DataDic soDic = null;
 			dataPool.TryGetValue(typeof(T), out soDic);

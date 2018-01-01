@@ -14,7 +14,7 @@ namespace EasyExcel
 		/// <summary>
 		/// This is where the generated ScriptableObject files will be.
 		/// </summary>
-		public const string AssetPath = "Assets/Resources/EasyExcel/Example/AutoGenAsset/";
+		public const string AssetPath = "Assets/EasyExcel/Example/AutoGenAsset/";
 
 		/// <summary>
 		/// Assetbudle name of generated ScriptableObject files.

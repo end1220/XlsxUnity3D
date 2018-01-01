@@ -9,7 +9,7 @@ public class Example : MonoBehaviour
 
 	void Start()
 	{
-		mgr.Load(false);
+		mgr.Load(true);
 
 		/*var npc = mgr.Get<ItemData>(2008);
 		Debug.Log(npc.Description);
