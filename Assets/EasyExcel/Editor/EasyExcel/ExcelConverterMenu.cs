@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -9,12 +10,12 @@ using UnityEditor;
 namespace EasyExcel
 {
 
-	public class ExcelConverterWindow
+	public class ExcelConverterMenu
 	{
 		static string excelPathKey = "EasyExcelExcelPath";
 		static string csChangedKey = "EasyExcelCSChanged";
 
-		[MenuItem(@"Tools/EasyExcel/ImportFolder")]
+		[MenuItem(@"Tools/EasyExcel/Import")]
 		public static void ImportFolder()
 		{
 			string historyExcelPath = EditorPrefs.GetString(excelPathKey);
@@ -23,14 +24,9 @@ namespace EasyExcel
 			string excelPath = EditorUtility.OpenFolderPanel("Select folder of .xls/xlsx", historyExcelPath, "");
 			if (string.IsNullOrEmpty(excelPath))
 				return;
-			EditorPrefs.SetString(excelPathKey, excelPath);
-			ToCSharps(excelPath, Environment.CurrentDirectory + "/" + Config.Instance.CSharpPath);
-		}
 
-		[MenuItem(@"Tools/EasyExcel/ImportFile")]
-		public static void ImportFile()
-		{
-			
+			EditorPrefs.SetString(excelPathKey, excelPath);
+			ToCSharps(excelPath, Environment.CurrentDirectory + "/" + Config.CSharpPath);
 		}
 
 		[MenuItem(@"Tools/EasyExcel/Clean")]
@@ -38,14 +34,50 @@ namespace EasyExcel
 		{
 			EditorPrefs.SetBool(csChangedKey, false);
 
-			if (Directory.Exists(Config.Instance.CSharpPath))
-				Directory.Delete(Config.Instance.CSharpPath, true);
-			Directory.CreateDirectory(Config.Instance.CSharpPath);
+			if (Directory.Exists(Config.CSharpPath))
+				Directory.Delete(Config.CSharpPath, true);
 
-			if (Directory.Exists(Config.Instance.AssetPath))
-				Directory.Delete(Config.Instance.AssetPath, true);
-			Directory.CreateDirectory(Config.Instance.AssetPath);
+			string csMeta = null;
+			if (Config.CSharpPath.EndsWith("/") || Config.CSharpPath.EndsWith("\\"))
+				csMeta = Config.CSharpPath.Substring(0, Config.CSharpPath.Length - 1) + ".meta";
+			if (File.Exists(csMeta))
+				File.Delete(csMeta);
 
+			if (Directory.Exists(Config.AssetPath))
+				Directory.Delete(Config.AssetPath, true);
+
+			string asMeta = null;
+			if (Config.AssetPath.EndsWith("/") || Config.AssetPath.EndsWith("\\"))
+				asMeta = Config.AssetPath.Substring(0, Config.AssetPath.Length - 1) + ".meta";
+			if (File.Exists(asMeta))
+				File.Delete(asMeta);
+
+			AssetDatabase.Refresh();
+		}
+
+		[MenuItem(@"Tools/EasyExcel/Build Assetbundle")]
+		public static void BuildAssetbundle()
+		{
+			if (!Directory.Exists(Config.AssetbundlePath))
+			{
+				int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("{0} doesn't exist. Would you like to create it?", Config.AssetbundlePath), "Create", "Cancel", "Quit");
+				if (opt == 0)
+					Directory.CreateDirectory(Config.AssetbundlePath);
+				else if (opt == 1 || opt == 2)
+					return;
+			}
+			
+			List<string> assetNames = new List<string>();
+			string[] files = Directory.GetFiles(Config.AssetPath);
+			for (int i = 0; i < files.Length; ++i)
+				if (files[i].EndsWith(".asset"))
+					assetNames.Add(files[i].Substring(files[i].IndexOf("Assets")).Replace("\\", "/"));
+
+			AssetBundleBuild build = new AssetBundleBuild();
+			build.assetBundleName = Config.AssetbudleName;
+			build.assetNames = assetNames.ToArray();
+			BuildPipeline.BuildAssetBundles(Config.AssetbundlePath, new AssetBundleBuild[] { build }, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+			EditorUtility.DisplayDialog("EasyExcel", "Build Assetbundle done.", "OK");
 			AssetDatabase.Refresh();
 		}
 
@@ -53,6 +85,9 @@ namespace EasyExcel
 		{
 			try
 			{
+				xlsxPath = xlsxPath.Replace("\\", "/");
+				csPath = csPath.Replace("\\", "/");
+
 				if (!Directory.Exists(xlsxPath))
 				{
 					EditorUtility.DisplayDialog("EasyExcel", "Excel files path doesn't exist.", "OK");
@@ -60,8 +95,11 @@ namespace EasyExcel
 				}
 				if (!Directory.Exists(csPath))
 				{
-					EditorUtility.DisplayDialog("EasyExcel", string.Format("Folder {0} doesn't exist.", csPath), "OK");
-					return;
+					int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("{0} doesn't exist. Would you like to create it?", csPath), "Create", "Cancel", "Quit");
+					if (opt == 0)
+						Directory.CreateDirectory(csPath);
+					else if (opt == 1 || opt == 2)
+						return;
 				}
 				xlsxPath = xlsxPath.Replace("\\", "/");
 				csPath = csPath.Replace("\\", "/");
@@ -108,7 +146,7 @@ namespace EasyExcel
 					EditorUtility.ClearProgressBar();
 					string historyExcelPath = EditorPrefs.GetString(excelPathKey);
 					if (!string.IsNullOrEmpty(historyExcelPath))
-						ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.Instance.AssetPath);
+						ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.AssetPath);
 				}
 
 			}
@@ -128,7 +166,7 @@ namespace EasyExcel
 				EditorPrefs.SetBool(csChangedKey, false);
 				string historyExcelPath = EditorPrefs.GetString(excelPathKey);
 				if (!string.IsNullOrEmpty(historyExcelPath))
-					ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.Instance.AssetPath);
+					ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.AssetPath);
 			}
 		}
 
@@ -136,6 +174,9 @@ namespace EasyExcel
 		{
 			try
 			{
+				xlsxPath = xlsxPath.Replace("\\", "/");
+				assetPath = assetPath.Replace("\\", "/");
+
 				if (!Directory.Exists(xlsxPath))
 				{
 					EditorUtility.DisplayDialog("EasyExcel", "Xls/xlsx path doesn't exist.", "OK");
@@ -143,8 +184,11 @@ namespace EasyExcel
 				}
 				if (!Directory.Exists(assetPath))
 				{
-					EditorUtility.DisplayDialog("EasyExcel", "Asset path doesn't exist.", "OK");
-					return;
+					int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("{0} doesn't exist. Would you like to create it?", assetPath), "Create", "Cancel", "Quit");
+					if (opt == 0)
+						Directory.CreateDirectory(assetPath);
+					else if (opt == 1 || opt == 2)
+						return;
 				}
 				xlsxPath = xlsxPath.Replace("\\", "/");
 				assetPath = assetPath.Replace("\\", "/");
@@ -162,6 +206,14 @@ namespace EasyExcel
 					{
 						UpdateProgress(i, filePaths.Length, "");
 						ExcelConverter.ToAsset(filePath, assetPath);
+
+						// assign asset bundle name.
+						int index = filePath.LastIndexOf("/") + 1;
+						string fileName = filePath.Substring(index, filePath.LastIndexOf(".") - index);
+						string itemPath = assetPath + ExcelConverter.GetAssetName(fileName);
+						itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
+						AssetImporter assetImporter = AssetImporter.GetAtPath(itemPath);
+						assetImporter.assetBundleName = Config.AssetbudleName;
 					}
 				}
 

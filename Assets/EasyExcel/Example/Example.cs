@@ -8,18 +8,18 @@ public class Example : MonoBehaviour
 
 	void Start()
 	{
-		DataManager mgr = new DataManager();
+		DataTableManager mgr = new DataTableManager();
 		mgr.Load();
 
-		/*var npc = mgr.Get<Npc0Data>(6000);
-		Debug.Log(npc.res);
+		var npc = mgr.Get<ItemData>(2008);
+		Debug.Log(npc.Description);
 
-		var dic = mgr.GetList<Npc0Data>();
+		var dic = mgr.GetList<RoleData>();
 		foreach (var item in dic.Values)
 		{
-			Npc0Data np = item as Npc0Data;
-			Debug.Log(np.res);
-		}*/
+			RoleData np = item as RoleData;
+			Debug.Log(np.Icon);
+		}
 	}
 
 

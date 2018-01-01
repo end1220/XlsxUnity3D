@@ -74,7 +74,7 @@ namespace EasyExcel
 			return sheetData;
 		}
 
-		public static DataTable GetDataTable(string filePath)
+		public static System.Data.DataTable GetDataTable(string filePath)
 		{
 			FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
 			IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);

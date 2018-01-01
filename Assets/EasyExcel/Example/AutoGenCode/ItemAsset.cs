@@ -7,7 +7,7 @@ using EasyExcel;
 
 
 [Serializable]
-public class RoleData : SingleData
+public class ItemData : SingleData
 {
 	public string Name;
 
@@ -62,13 +62,13 @@ public class RoleData : SingleData
 #endif
 }
 
-public class RoleAsset : DataTable
+public class ItemAsset : DataTable
 {
-	public List<RoleData> elements = new List<RoleData>();
+	public List<ItemData> elements = new List<ItemData>();
 
 	public override void AddData(SingleData data)
 	{
-		elements.Add(data as RoleData);
+		elements.Add(data as ItemData);
 	}
 
 	public override int GetDataCount()

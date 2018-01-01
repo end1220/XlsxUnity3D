@@ -1,5 +1,4 @@
 
-﻿using UnityEditor;
 using UnityEngine;
 using System.Linq;
 using System.Reflection;
@@ -13,7 +12,7 @@ namespace EasyExcel
 	using DataDic = Dictionary<int, SingleData>;
 
 	/// <summary>
-	/// A piece of data represents a row in excel.
+	/// A piece of data(one row in excel)
 	/// </summary>
 	[Serializable]
 	public abstract class SingleData
@@ -30,9 +29,9 @@ namespace EasyExcel
 	}
 
 	/// <summary>
-	/// Collection of SingleData
+	/// Table of SingleData
 	/// </summary>
-	public abstract class DataCollection : ScriptableObject
+	public abstract class DataTable : ScriptableObject
 	{
 		public abstract void AddData(SingleData data);
 
@@ -42,37 +41,28 @@ namespace EasyExcel
 
 	}
 
-	/// <summary>
-	/// Data manager for xlsx
-	/// </summary>
-	public class DataManager
+
+	public class DataTableManager
 	{
 		private Dictionary<Type, DataDic> dataPool = new Dictionary<Type, DataDic>();
 
 		
 		public void Load()
 		{
-			string dataRootPath = "Assets" + Config.Instance.AssetPath;
+			AssetBundle bundle = AssetBundle.LoadFromFile(Config.AssetbundlePath + Config.AssetbudleName);
 
-			Type baseType = typeof(DataCollection);
+			Type baseType = typeof(DataTable);
 			Assembly assembly = baseType.Assembly;
 			foreach (Type type in assembly.GetTypes().Where(t => t.IsSubclassOf(baseType)))
 			{
 				string collectionClassName = type.Name;
 				string headName = collectionClassName.Substring(0, collectionClassName.IndexOf("Asset"));
 
-				string filePath;
-				DataCollection collection = null;
-#if UNITY_EDITOR
-				filePath = dataRootPath + headName + ".asset";
-				collection = AssetDatabase.LoadAssetAtPath(filePath, typeof(DataCollection)) as DataCollection;
-#else
-				filePath = "Template" + headName + ".asset";
-				collection = Resources.Load(filePath) as DataCollection;
-#endif
+				string filePath = Config.AssetPath + headName + ".asset";
+				DataTable collection = bundle.LoadAsset(filePath, typeof(DataTable)) as DataTable;
 				if (collection == null)
 				{
-					Debug.LogError("DataManager: Load asset error, " + filePath);
+					Debug.LogError("DataManager: Load asset error with " + filePath);
 					continue;
 				}
 				DataDic dataDic = new DataDic();

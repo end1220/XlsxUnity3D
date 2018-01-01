@@ -66,7 +66,7 @@ namespace EasyExcel
 			try
 			{
 				var asset = ScriptableObject.CreateInstance(GetAssetClassName(fileName));
-				DataCollection dataCollect = asset as DataCollection;
+				DataTable dataCollect = asset as DataTable;
 
 				string className = GetDataClassName(fileName);
 				Type dataType = Type.GetType(className);
@@ -263,7 +263,7 @@ namespace EasyExcel
 
 				// collection class
 				//csFile += "\n\n[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
-				csFile += "public class " + GetAssetClassName(fileName) + " : DataCollection\n";
+				csFile += "public class " + GetAssetClassName(fileName) + " : DataTable\n";
 				csFile += "{\n";
 				csFile += "\tpublic List<" + GetDataClassName(fileName) + "> elements = new List<" + GetDataClassName(fileName) + ">();\n\n";
 
