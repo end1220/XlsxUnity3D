@@ -21,7 +21,7 @@ namespace EasyExcel
 			string historyExcelPath = EditorPrefs.GetString(excelPathKey);
 			if (string.IsNullOrEmpty(historyExcelPath) || !Directory.Exists(historyExcelPath))
 				historyExcelPath = Environment.CurrentDirectory;
-			string excelPath = EditorUtility.OpenFolderPanel("Select folder of .xls/xlsx", historyExcelPath, "");
+			string excelPath = EditorUtility.OpenFolderPanel("Select folder of .xlsx", historyExcelPath, "");
 			if (string.IsNullOrEmpty(excelPath))
 				return;
 
@@ -70,7 +70,7 @@ namespace EasyExcel
 			List<string> assetNames = new List<string>();
 			string[] files = Directory.GetFiles(Config.AssetPath);
 			for (int i = 0; i < files.Length; ++i)
-				if (files[i].EndsWith(".asset"))
+				if (files[i].EndsWith(Config.AssetFileExtension))
 					assetNames.Add(files[i].Substring(files[i].IndexOf("Assets")).Replace("\\", "/"));
 
 			AssetBundleBuild build = new AssetBundleBuild();
@@ -117,7 +117,7 @@ namespace EasyExcel
 						string newCs = ExcelConverter.ToCSharp(xlsxFilePath);
 						int index = xlsxFilePath.LastIndexOf("/") + 1;
 						string fileName = xlsxFilePath.Substring(index, xlsxFilePath.LastIndexOf(".") - index);
-						string csFilePath = csPath + ExcelConverter.GetAssetClassName(fileName) + ".cs";
+						string csFilePath = csPath + Config.GetDataTableClassName(fileName) + ".cs";
 						bool shouldWrite = true;
 						if (File.Exists(csFilePath))
 						{
@@ -211,7 +211,7 @@ namespace EasyExcel
 						// assign asset bundle name.
 						int index = filePath.LastIndexOf("/") + 1;
 						string fileName = filePath.Substring(index, filePath.LastIndexOf(".") - index);
-						string itemPath = assetPath + ExcelConverter.GetAssetName(fileName);
+						string itemPath = assetPath + Config.GetAssetFileName(fileName);
 						itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
 						AssetImporter assetImporter = AssetImporter.GetAtPath(itemPath);
 						assetImporter.assetBundleName = Config.AssetbudleName;

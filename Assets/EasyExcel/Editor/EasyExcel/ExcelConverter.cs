@@ -11,19 +11,6 @@ namespace EasyExcel
 	/// </summary>
 	public class ExcelConverter
 	{
-		// Row 0 is Name
-		const int NAME_ROW_INDEX = 0;
-
-		// Row 1 is Type
-		const int TYPE_ROW_INDEX = 1;
-
-		// Row 2 is default value
-		const int DEFAULT_VALUE_ROW_INDEX = 2;
-
-		// Row 3 is where real data starts
-		const int DATA_START_INDEX = 3;
-
-
 		public static void ToAsset(string xlsxPath, string outputPath)
 		{
 			try
@@ -49,7 +36,7 @@ namespace EasyExcel
 				string fileName = xlsxPath.Substring(index, xlsxPath.LastIndexOf(".") - index);
 				var sheetData = ExcelReader.AsStringArray(xlsxPath);
 				string txt = ToCSharp(sheetData, fileName);
-				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + GetAssetClassName(fileName) + ".cs", false);
+				System.IO.StreamWriter streamwriter = new System.IO.StreamWriter(outputPath + Config.GetDataTableClassName(fileName) + ".cs", false);
 				streamwriter.Write(txt);
 				streamwriter.Flush();
 				streamwriter.Close();
@@ -74,10 +61,10 @@ namespace EasyExcel
 		{
 			try
 			{
-				var asset = ScriptableObject.CreateInstance(GetAssetClassName(fileName));
+				var asset = ScriptableObject.CreateInstance(Config.GetDataTableClassName(fileName));
 				DataTable dataCollect = asset as DataTable;
 
-				string className = GetDataClassName(fileName);
+				string className = Config.GetRowDataClassName(fileName);
 				Type dataType = Type.GetType(className);
 				if (dataType == null)
 				{
@@ -92,7 +79,7 @@ namespace EasyExcel
 
 				System.Reflection.ConstructorInfo dataCtor = dataType.GetConstructor(Type.EmptyTypes);
 
-				for (int row = DATA_START_INDEX; row < sheetData.rowCount; ++row)
+				for (int row = Config.DATA_START_INDEX; row < sheetData.rowCount; ++row)
 				{
 					for (int col = 0; col < sheetData.columnCount; ++col)
 						sheetData.At(row, col).Replace("\n", "\\n");
@@ -102,7 +89,7 @@ namespace EasyExcel
 					dataCollect.AddData(inst);
 				}
 
-				string itemPath = outputPath + GetAssetName(fileName);
+				string itemPath = outputPath + Config.GetAssetFileName(fileName);
 				itemPath = itemPath.Substring(itemPath.IndexOf("Assets"));
 				AssetDatabase.CreateAsset(asset, itemPath);
 
@@ -123,7 +110,7 @@ namespace EasyExcel
 
 				csFile += "using System;\nusing System.Collections.Generic;\nusing EasyExcel;\n\n\n";
 				csFile += "[Serializable]\n";
-				csFile += "public class " + GetDataClassName(fileName) + " : RowData" + "\n";
+				csFile += "public class " + Config.GetRowDataClassName(fileName) + " : RowData" + "\n";
 				csFile += "" + "{" + "\n";
 
 				int columnCount = sheetData.columnCount;
@@ -132,7 +119,7 @@ namespace EasyExcel
 				string[] variableName = new string[columnCount];
 				for (int col = 0; col < columnCount; col++)
 				{
-					variableName[col] = sheetData.At(NAME_ROW_INDEX, col);
+					variableName[col] = sheetData.At(Config.NAME_ROW_INDEX, col);
 				}
 
 				// Get variable types
@@ -141,7 +128,7 @@ namespace EasyExcel
 				// skip column 0 for ID
 				for (int col = 1; col < columnCount; col++)
 				{
-					string cellInfo = sheetData.At(TYPE_ROW_INDEX, col);
+					string cellInfo = sheetData.At(Config.TYPE_ROW_INDEX, col);
 					variableLength[col] = null;
 					variableType[col] = cellInfo;
 
@@ -181,7 +168,7 @@ namespace EasyExcel
 				// skip column 0 for ID
 				for (int col = 1; col < columnCount; col++)
 				{
-					variableDefaults[col] = sheetData.At(DEFAULT_VALUE_ROW_INDEX, col);
+					variableDefaults[col] = sheetData.At(Config.DEFAULT_VALUE_ROW_INDEX, col);
 
 					string varType = variableType[col];
 					if (varType.Equals("bool"))
@@ -232,18 +219,6 @@ namespace EasyExcel
 							csFile += "\t\t{\n";
 							csFile += "\t\t\t" + varName + "[i] = " + varName + "Array[i];\n";
 							csFile += "\t\t}\n";
-
-							//csFile += "\t\tfor(int i=0; i<" + varLen + "; i++)" + "\n";
-							//csFile += "\t\t\t" + varName + "[i] = \"" + varDefault + "\";\n";
-
-							//csFile += "\t\tstring[] " + varName + "Array = sheet[row][column].Split(\',\');" + "\n";
-							//csFile += "\t\tint " + varName + "Count = " + varName + "Array.Length;" + "\n";
-							/*csFile += "\t\tfor(int i=0; i<" + varLen + "; i++){" + "\n";
-							csFile += "\t\t\tif(i < " + varName + "Count)" + "\n";
-							csFile += "\t\t\t\t" + varName + "[i] = " + varName + "Array[i];\n";
-							csFile += "\t\t\telse" + "\n";
-							csFile += "\t\t\t\t" + varName + "[i] = \"" + varDefault + "\";\n";
-							csFile += "\t\t}\n";*/
 						}
 					}
 
@@ -256,12 +231,11 @@ namespace EasyExcel
 				csFile += "}\n\n";
 
 				// DataTable class
-				//csFile += "\n\n[CreateAssetMenu(fileName = \"new " + fileName + "\", menuName = \"Template/" + fileName + "\", order = 999)]\n";
-				csFile += "public class " + GetAssetClassName(fileName) + " : DataTable\n";
+				csFile += "public class " + Config.GetDataTableClassName(fileName) + " : DataTable\n";
 				csFile += "{\n";
-				csFile += "\tpublic List<" + GetDataClassName(fileName) + "> elements = new List<" + GetDataClassName(fileName) + ">();\n\n";
+				csFile += "\tpublic List<" + Config.GetRowDataClassName(fileName) + "> elements = new List<" + Config.GetRowDataClassName(fileName) + ">();\n\n";
 
-				csFile += "\tpublic override void AddData(RowData data)\n\t{\n\t\telements.Add(data as " + GetDataClassName(fileName) + ");\n\t}\n\n";
+				csFile += "\tpublic override void AddData(RowData data)\n\t{\n\t\telements.Add(data as " + Config.GetRowDataClassName(fileName) + ");\n\t}\n\n";
 				csFile += "\tpublic override int GetDataCount()\n\t{\n\t\treturn elements.Count;\n\t}\n\n";
 				csFile += "\tpublic override RowData GetData(int index)\n\t{\n\t\treturn elements[index];\n\t}\n";
 
@@ -274,21 +248,6 @@ namespace EasyExcel
 				Debug.LogError(ex.ToString());
 			}
 			return "";
-		}
-
-		static string GetDataClassName(string fileName)
-		{
-			return fileName + "Data";
-		}
-
-		public static string GetAssetClassName(string fileName)
-		{
-			return fileName + "Asset";
-		}
-
-		public static string GetAssetName(string fileName)
-		{
-			return fileName + ".asset";
 		}
 
 	}
