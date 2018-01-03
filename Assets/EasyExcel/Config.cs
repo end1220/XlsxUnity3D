@@ -39,17 +39,14 @@ namespace EasyExcel
 
 		#region Configs for editor tools
 
-		// Row 0 in a excel sheet is Name
+		// This row in a excel sheet is Name
 		public const int NAME_ROW_INDEX = 0;
 
-		// Row 1 in a excel sheet is Type
+		// This row in a excel sheet is Type
 		public const int TYPE_ROW_INDEX = 1;
 
-		// Row 2 in a excel sheet is default value
-		public const int DEFAULT_VALUE_ROW_INDEX = 2;
-
-		// Row 3 in a excel sheet is where real data starts
-		public const int DATA_START_INDEX = 3;
+		// This row in a excel sheet is where real data starts
+		public const int DATA_START_INDEX = 2;
 
 
 		public static string GetRowDataClassName(string excelFileName)

@@ -160,7 +160,7 @@ namespace EasyExcel
 
 				}
 
-				string[] variableDefaults = new string[columnCount];
+				//string[] variableDefaults = new string[columnCount];
 				csFile += "#if UNITY_EDITOR\n";
 				csFile += "\tpublic override int _init(List<List<string>> sheet, int row, int column)" + "\n";
 				csFile += "\t{" + "\n";
@@ -168,9 +168,9 @@ namespace EasyExcel
 				// skip column 0 for ID
 				for (int col = 1; col < columnCount; col++)
 				{
-					variableDefaults[col] = sheetData.At(Config.DEFAULT_VALUE_ROW_INDEX, col);
-
 					string varType = variableType[col];
+
+					/*variableDefaults[col] = sheetData.At(Config.DEFAULT_VALUE_ROW_INDEX, col);
 					if (varType.Equals("bool"))
 					{
 						if (variableDefaults[col].Equals("0"))
@@ -179,7 +179,7 @@ namespace EasyExcel
 							variableDefaults[col] = "true";
 					}
 
-					string varDefault = variableDefaults[col];
+					string varDefault = variableDefaults[col];*/
 					string varLen = variableLength[col];
 					string varName = variableName[col];
 
@@ -187,7 +187,7 @@ namespace EasyExcel
 					{
 						if (varLen == null)
 						{
-							csFile += "\t\t" + varName + " = " + varDefault + ";\n";
+							//csFile += "\t\t" + varName + " = " + varDefault + ";\n";
 							csFile += "\t\t" + varType + ".TryParse(sheet[row][column], out " + varName + ");\n";
 						}
 						else
@@ -206,7 +206,7 @@ namespace EasyExcel
 						if (varLen == null)
 						{
 							csFile += "\t\tif(sheet[row][column] == null)" + "\n";
-							csFile += "\t\t\t" + varName + " = \"" + varDefault + "\";\n";
+							csFile += "\t\t\t" + varName + " = \"" + /*varDefault + */"\";\n";
 							csFile += "\t\telse" + "\n";
 							csFile += "\t\t\t" + varName + " = sheet[row][column];\n";
 						}
