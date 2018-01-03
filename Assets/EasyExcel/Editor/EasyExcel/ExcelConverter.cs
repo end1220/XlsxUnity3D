@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -78,7 +79,7 @@ namespace EasyExcel
 				}
 
 				System.Reflection.ConstructorInfo dataCtor = dataType.GetConstructor(Type.EmptyTypes);
-
+				HashSet<int> ids = new HashSet<int>();
 				for (int row = Config.DATA_START_INDEX; row < sheetData.rowCount; ++row)
 				{
 					for (int col = 0; col < sheetData.columnCount; ++col)
@@ -86,7 +87,13 @@ namespace EasyExcel
 
 					RowData inst = dataCtor.Invoke(null) as RowData;
 					inst._init(sheetData.Table, row, 0);
-					dataCollect.AddData(inst);
+					if (!ids.Contains(inst.ID))
+					{
+						dataCollect.AddData(inst);
+						ids.Add(inst.ID);
+					}
+					else
+						Debug.LogWarning("EasyExcel: More than one rows use ID " + inst.ID + " in " + fileName + ". Check your file.");
 				}
 
 				string itemPath = outputPath + Config.GetAssetFileName(fileName);
@@ -113,7 +120,13 @@ namespace EasyExcel
 				csFile += "public class " + Config.GetRowDataClassName(fileName) + " : RowData" + "\n";
 				csFile += "" + "{" + "\n";
 
-				int columnCount = sheetData.columnCount;
+				int columnCount = 0;
+				for (int col = 0; col < columnCount; col++)
+				{
+					if (string.IsNullOrEmpty(sheetData.At(Config.NAME_ROW_INDEX, col)))
+						break;
+					columnCount++;
+				}
 
 				// Get variable names
 				string[] variableName = new string[columnCount];
