@@ -31,6 +31,8 @@ namespace EasyExcel
 			if (string.IsNullOrEmpty(excelPath))
 				return;
 
+			DeleteAssetbundleFolder();
+
 			EditorPrefs.SetString(excelPathKey, excelPath);
 			ToCSharps(excelPath, Environment.CurrentDirectory + "/" + Config.CSharpPath);
 		}
@@ -40,23 +42,9 @@ namespace EasyExcel
 		{
 			EditorPrefs.SetBool(csChangedKey, false);
 
-			if (Directory.Exists(Config.CSharpPath))
-				Directory.Delete(Config.CSharpPath, true);
-
-			string csMeta = null;
-			if (Config.CSharpPath.EndsWith("/") || Config.CSharpPath.EndsWith("\\"))
-				csMeta = Config.CSharpPath.Substring(0, Config.CSharpPath.Length - 1) + ".meta";
-			if (File.Exists(csMeta))
-				File.Delete(csMeta);
-
-			if (Directory.Exists(Config.AssetPath))
-				Directory.Delete(Config.AssetPath, true);
-
-			string asMeta = null;
-			if (Config.AssetPath.EndsWith("/") || Config.AssetPath.EndsWith("\\"))
-				asMeta = Config.AssetPath.Substring(0, Config.AssetPath.Length - 1) + ".meta";
-			if (File.Exists(asMeta))
-				File.Delete(asMeta);
+			DeleteCSFolder();
+			DeleteAssetFolder();
+			DeleteAssetbundleFolder();
 
 			AssetDatabase.Refresh();
 		}
@@ -107,6 +95,11 @@ namespace EasyExcel
 					else if (opt == 1 || opt == 2)
 						return;
 				}
+				string tmpPath = Environment.CurrentDirectory + "/EasyExcelTmp/";
+				if (Directory.Exists(tmpPath))
+					Directory.Delete(tmpPath, true);
+				Directory.CreateDirectory(tmpPath);
+				
 				xlsxPath = xlsxPath.Replace("\\", "/");
 				csPath = csPath.Replace("\\", "/");
 				if (!csPath.EndsWith("/"))
@@ -116,13 +109,17 @@ namespace EasyExcel
 				string[] filePaths = Directory.GetFiles(xlsxPath);
 				for (int i = 0; i < filePaths.Length; ++i)
 				{
-					string xlsxFilePath = filePaths[i].Replace("\\", "/"); ;
+					string xlsxFilePath = filePaths[i].Replace("\\", "/");
+					if (i + 1 < filePaths.Length)
+						UpdateProgressBar(i + 1, filePaths.Length, "");
+					else
+						ClearProgressBar();
 					if (IsXlsxFile(xlsxFilePath))
 					{
-						UpdateProgress(i, filePaths.Length, "");
 						string newCs = ExcelConverter.ToCSharp(xlsxFilePath);
 						int index = xlsxFilePath.LastIndexOf("/") + 1;
 						string fileName = xlsxFilePath.Substring(index, xlsxFilePath.LastIndexOf(".") - index);
+						string tmpCsFilePath = tmpPath + Config.GetDataTableClassName(fileName) + ".cs";
 						string csFilePath = csPath + Config.GetDataTableClassName(fileName) + ".cs";
 						bool shouldWrite = true;
 						if (File.Exists(csFilePath))
@@ -133,7 +130,7 @@ namespace EasyExcel
 						if (shouldWrite)
 						{
 							csChanged = true;
-							StreamWriter streamwriter = new StreamWriter(csFilePath, false);
+							StreamWriter streamwriter = new StreamWriter(tmpCsFilePath, false);
 							streamwriter.Write(newCs);
 							streamwriter.Flush();
 							streamwriter.Close();
@@ -144,12 +141,20 @@ namespace EasyExcel
 				if (csChanged)
 				{
 					EditorPrefs.SetBool(csChangedKey, true);
-					EditorUtility.ClearProgressBar();
+					string[] files = Directory.GetFiles(tmpPath);
+					foreach (string s in files)
+					{
+						string p = s.Replace("\\", "/");
+						File.Copy(s, csPath + p.Substring(p.LastIndexOf("/")), true);
+					}
+					Directory.Delete(tmpPath, true);
 					AssetDatabase.Refresh();
+					Debug.Log("EasyExcel: CSharp files are generated, wait for genrerating assets...");
 				}
 				else
 				{
-					EditorUtility.ClearProgressBar();
+					Debug.Log("EasyExcel: No CSharp files changed, begin genrerating assets...");
+					ClearProgressBar();
 					string historyExcelPath = EditorPrefs.GetString(excelPathKey);
 					if (!string.IsNullOrEmpty(historyExcelPath))
 						ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.AssetPath);
@@ -159,7 +164,8 @@ namespace EasyExcel
 			catch (Exception e)
 			{
 				Debug.LogError(e.ToString());
-				EditorUtility.ClearProgressBar();
+				EditorPrefs.SetBool(csChangedKey, false);
+				ClearProgressBar();
 				AssetDatabase.Refresh();
 			}
 		}
@@ -172,7 +178,10 @@ namespace EasyExcel
 				EditorPrefs.SetBool(csChangedKey, false);
 				string historyExcelPath = EditorPrefs.GetString(excelPathKey);
 				if (!string.IsNullOrEmpty(historyExcelPath))
+				{
+					Debug.Log("EasyExcel: Scripts are reloaded, begin genrerating assets...");
 					ToAssets(historyExcelPath, Environment.CurrentDirectory + "/" + Config.AssetPath);
+				}
 			}
 		}
 
@@ -211,7 +220,7 @@ namespace EasyExcel
 					string filePath = filePaths[i].Replace("\\", "/"); ;
 					if (IsXlsxFile(filePath))
 					{
-						UpdateProgress(i, filePaths.Length, "");
+						UpdateProgressBar(i, filePaths.Length, "");
 						ExcelConverter.ToAsset(filePath, assetPath);
 						count++;
 						// assign asset bundle name.
@@ -224,28 +233,80 @@ namespace EasyExcel
 					}
 				}
 
-				EditorUtility.ClearProgressBar();
+				Debug.Log("EasyExcel: Assets are genrerated successfully.");
+
+				ClearProgressBar();
 				AssetDatabase.Refresh();
 				EditorUtility.DisplayDialog("EasyExcel", string.Format("Import done. {0} tables are imported.", count), "OK");
 			}
 			catch (Exception e)
 			{
 				Debug.LogError(e.ToString());
-				EditorUtility.ClearProgressBar();
+				ClearProgressBar();
 				AssetDatabase.Refresh();
 			}
 		}
+
+		static void DeleteCSFolder()
+		{
+			if (Directory.Exists(Config.CSharpPath))
+				Directory.Delete(Config.CSharpPath, true);
+
+			string csMeta = null;
+			if (Config.CSharpPath.EndsWith("/") || Config.CSharpPath.EndsWith("\\"))
+				csMeta = Config.CSharpPath.Substring(0, Config.CSharpPath.Length - 1) + ".meta";
+			if (File.Exists(csMeta))
+				File.Delete(csMeta);
+		}
+
+		static void DeleteAssetFolder()
+		{
+			if (Directory.Exists(Config.AssetPath))
+				Directory.Delete(Config.AssetPath, true);
+
+			string asMeta = null;
+			if (Config.AssetPath.EndsWith("/") || Config.AssetPath.EndsWith("\\"))
+				asMeta = Config.AssetPath.Substring(0, Config.AssetPath.Length - 1) + ".meta";
+			if (File.Exists(asMeta))
+				File.Delete(asMeta);
+		}
+
+		static void DeleteAssetbundleFolder()
+		{
+			if (Directory.Exists(Config.AssetbundlePath))
+				Directory.Delete(Config.AssetbundlePath, true);
+
+			string abMeta = null;
+			if (Config.AssetbundlePath.EndsWith("/") || Config.AssetbundlePath.EndsWith("\\"))
+				abMeta = Config.AssetbundlePath.Substring(0, Config.AssetbundlePath.Length - 1) + ".meta";
+			if (File.Exists(abMeta))
+				File.Delete(abMeta);
+		}
+
 		static bool IsXlsxFile(string filePath)
 		{
 			return filePath.EndsWith(".xlsx");
 		}
-		static void UpdateProgress(int progress, int progressMax, string desc)
+
+		static bool isDisplayingProgress = false;
+		static void UpdateProgressBar(int progress, int progressMax, string desc)
 		{
 			string title = "Importing...[" + progress + " / " + progressMax + "]";
 			float value = (float)progress / (float)progressMax;
 			EditorUtility.DisplayProgressBar(title, desc, value);
+			isDisplayingProgress = true;
 		}
 
+		static void ClearProgressBar()
+		{
+			if (isDisplayingProgress)
+			{
+				try
+				{ EditorUtility.ClearProgressBar(); }
+				catch (Exception){}
+				isDisplayingProgress = false;
+			}
+		}
 	}
 
 }
