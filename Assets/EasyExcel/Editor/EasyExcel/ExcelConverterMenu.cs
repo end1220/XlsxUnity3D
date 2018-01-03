@@ -20,7 +20,13 @@ namespace EasyExcel
 		{
 			string historyExcelPath = EditorPrefs.GetString(excelPathKey);
 			if (string.IsNullOrEmpty(historyExcelPath) || !Directory.Exists(historyExcelPath))
-				historyExcelPath = Environment.CurrentDirectory;
+			{
+				string fallbackDir = Environment.CurrentDirectory + "/Assets/EasyExcel/Example/ExcelFiles";
+				if (Directory.Exists(fallbackDir))
+					historyExcelPath = fallbackDir;
+				else
+					historyExcelPath = Environment.CurrentDirectory;
+			}
 			string excelPath = EditorUtility.OpenFolderPanel("Select folder of .xlsx", historyExcelPath, "");
 			if (string.IsNullOrEmpty(excelPath))
 				return;
@@ -60,7 +66,7 @@ namespace EasyExcel
 		{
 			if (!Directory.Exists(Config.AssetbundlePath))
 			{
-				int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("{0} doesn't exist. Would you like to create it?", Config.AssetbundlePath), "Create", "Cancel", "Quit");
+				int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("Config.AssetbundlePath doesn't exist, would you like to create it?\n{0}. ", Config.AssetbundlePath), "Create", "Cancel", "Quit");
 				if (opt == 0)
 					Directory.CreateDirectory(Config.AssetbundlePath);
 				else if (opt == 1 || opt == 2)
@@ -95,7 +101,7 @@ namespace EasyExcel
 				}
 				if (!Directory.Exists(csPath))
 				{
-					int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("{0} doesn't exist. Would you like to create it?", csPath), "Create", "Cancel", "Quit");
+					int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("Config.CSharpPath doesn't exist. Would you like to create it?\n{0}", csPath), "Create", "Cancel", "Quit");
 					if (opt == 0)
 						Directory.CreateDirectory(csPath);
 					else if (opt == 1 || opt == 2)
@@ -184,7 +190,7 @@ namespace EasyExcel
 				}
 				if (!Directory.Exists(assetPath))
 				{
-					int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("{0} doesn't exist. Would you like to create it?", assetPath), "Create", "Cancel", "Quit");
+					int opt = EditorUtility.DisplayDialogComplex("EasyExcel", string.Format("Config.AssetPath doesn't exist. Would you like to create it?\n{0}", assetPath), "Create", "Cancel", "Quit");
 					if (opt == 0)
 						Directory.CreateDirectory(assetPath);
 					else if (opt == 1 || opt == 2)

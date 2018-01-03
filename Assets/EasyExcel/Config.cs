@@ -12,6 +12,13 @@ namespace EasyExcel
 		// This is where the generated ScriptableObject files will be.
 		public const string AssetPath = "Assets/EasyExcel/Example/AutoGenAsset/";
 
+		// If true, before running, the imported ScriptableObjects should be built into assetbundle by clicking "Tools/EasyExcel/Build Assetbundle".
+		// The AssetbudleName below will be applied as the name of the assetbundle.
+		// The AssetbundlePath below will be the output folder.
+		// If false, you should make sure AssetPath is somewhere in Resources folder, for example "Assets/Resources/YourFolder/",
+		// and the two options AssetbudleName and AssetbundlePath will not be used.
+		public const bool LoadFromAssetbundle = true;
+
 		// Assetbudle name of generated ScriptableObject files.
 		public const string AssetbudleName = "datatable";
 
@@ -26,7 +33,7 @@ namespace EasyExcel
 		// for example Item.xlsx corresponds to Item + DataTableClassNamePostfix.
 		public const string DataTableClassNamePostfix = "DataTable";
 
-		// Postfix of generated ScriptableObject files.
+		// Extension of generated ScriptableObject files.
 		// for example Item.xlsx corresponds to Item + AssetFileExtension.
 		public const string AssetFileExtension = ".asset";
 
@@ -44,31 +51,17 @@ namespace EasyExcel
 		// Row 3 in a excel sheet is where real data starts
 		public const int DATA_START_INDEX = 3;
 
-		/// <summary>
-		/// Return the row data class name by excel file name.
-		/// </summary>
-		/// <param name="excelFileName">Excel file name without file extension</param>
-		/// <returns></returns>
+
 		public static string GetRowDataClassName(string excelFileName)
 		{
 			return excelFileName + RowDataClassNamePostfix;
 		}
 
-		/// <summary>
-		/// Return the data table class name by excel file name.
-		/// </summary>
-		/// <param name="excelFileName">Excel file name without file extension</param>
-		/// <returns></returns>
 		public static string GetDataTableClassName(string excelFileName)
 		{
 			return excelFileName + DataTableClassNamePostfix;
 		}
 
-		/// <summary>
-		/// Return the ScriptableObject asset file name by excel file name.
-		/// </summary>
-		/// <param name="excelFileName">Excel file name without file extension</param>
-		/// <returns></returns>
 		public static string GetAssetFileName(string excelFileName)
 		{
 			return excelFileName + AssetFileExtension;

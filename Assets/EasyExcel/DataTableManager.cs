@@ -46,12 +46,40 @@ namespace EasyExcel
 		private Dictionary<Type, DataDic> tableDataDic = new Dictionary<Type, DataDic>();
 
 
-		/// <summary>
-		/// Load all the tables. From assetbundle or Resources.
-		/// </summary>
-		/// <param name="fromAssetbundle">Set true if load from assetbundle file; Set false if load from Resources folder.</param>
-		public void Load(bool fromAssetbundle)
+		public T Get<T>(int id) where T : RowData
 		{
+			return Get(id, typeof(T)) as T;
+		}
+
+		public RowData Get(int id, Type type)
+		{
+			DataDic soDic = null;
+			tableDataDic.TryGetValue(type, out soDic);
+			if (soDic != null)
+			{
+				RowData data = null;
+				soDic.TryGetValue(id, out data);
+				return data;
+			}
+			return null;
+		}
+
+		public DataDic GetList<T>() where T : RowData
+		{
+			return GetList(typeof(T));
+		}
+
+		public DataDic GetList(Type type)
+		{
+			DataDic soDic = null;
+			tableDataDic.TryGetValue(type, out soDic);
+			return soDic;
+		}
+
+		public void Load()
+		{
+			bool fromAssetbundle = Config.LoadFromAssetbundle;
+
 			AssetBundle bundle = null;
 
 			if (fromAssetbundle)
@@ -60,7 +88,7 @@ namespace EasyExcel
 #if UNITY_EDITOR
 				if (!System.IO.File.Exists(assetbundlePath))
 				{
-					UnityEditor.EditorUtility.DisplayDialog("EasyExcel", string.Format("When loading from assetbundle, assetbundle {0} MUST be built first. Make sure to build it before running by menu Tools->EasyExcel->Build Assetbundle.", assetbundlePath), "OK");
+					UnityEditor.EditorUtility.DisplayDialog("EasyExcel", string.Format("When Config.LoadFromAssetbundle is true, you should build assetbundle before playing. \nClick Tools->EasyExcel->Build Assetbundle to build.", assetbundlePath), "OK");
 					return;
 				}
 #endif
@@ -71,11 +99,13 @@ namespace EasyExcel
 #if UNITY_EDITOR
 				if (!Config.AssetPath.Contains("/Resources/"))
 				{
-					UnityEditor.EditorUtility.DisplayDialog("EasyExcel", string.Format("When not loading from assetbundle, Config.AssetPath {0} MUST be in Resources folder.", Config.AssetPath), "OK");
+					UnityEditor.EditorUtility.DisplayDialog("EasyExcel", string.Format("When Config.LoadFromAssetbundle is false, Config.AssetPath MUST be in Resources folder.\nCurrent is {0}.", Config.AssetPath), "OK");
 					return;
 				}
 #endif
 			}
+
+			tableDataDic.Clear();
 
 			Type baseType = typeof(DataTable);
 			Assembly assembly = baseType.Assembly;
@@ -112,37 +142,12 @@ namespace EasyExcel
 				tableDataDic.Add(dataClassType, dataDic);
 			}
 
-			Debug.Log(string.Format("EasyExcel: {0} tables loaded.", tableDataDic.Count));
-		}
-
-		public T Get<T>(int id) where T : RowData
-		{
-			return Get(id, typeof(T)) as T;
-		}
-
-		public RowData Get(int id, Type type)
-		{
-			DataDic soDic = null;
-			tableDataDic.TryGetValue(type, out soDic);
-			if (soDic != null)
+			if (fromAssetbundle && bundle != null)
 			{
-				RowData data = null;
-				soDic.TryGetValue(id, out data);
-				return data;
+				bundle.Unload(true);
 			}
-			return null;
-		}
 
-		public DataDic GetList<T>() where T : RowData
-		{
-			return GetList(typeof(T));
-		}
-
-		public DataDic GetList(Type type)
-		{
-			DataDic soDic = null;
-			tableDataDic.TryGetValue(type, out soDic);
-			return soDic;
+			Debug.Log(string.Format("EasyExcel: {0} tables loaded.", tableDataDic.Count));
 		}
 
 	}
