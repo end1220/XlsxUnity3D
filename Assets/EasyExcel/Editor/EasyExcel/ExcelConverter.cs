@@ -121,7 +121,7 @@ namespace EasyExcel
 				csFile += "" + "{" + "\n";
 
 				int columnCount = 0;
-				for (int col = 0; col < columnCount; col++)
+				for (int col = 0; col < sheetData.columnCount; col++)
 				{
 					if (string.IsNullOrEmpty(sheetData.At(Config.NAME_ROW_INDEX, col)))
 						break;
